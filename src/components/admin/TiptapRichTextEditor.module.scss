@@ -1,0 +1,115 @@
+.tiptapRichTextEditor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+
+  &__loading {
+    min-height: 200px;
+    padding: var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    border: 1px dashed var(--color-border-dark);
+    border-radius: var(--radius-md);
+  }
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-md);
+  }
+
+  &__btn {
+    min-width: 2rem;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--t-fast) ease, border-color var(--t-fast) ease;
+
+    &:hover:not(:disabled) {
+      background: var(--color-surface-alt);
+      border-color: var(--color-accent);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &--active {
+      background: rgba(255, 106, 0, 0.12);
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+  }
+
+  &__sep {
+    width: 1px;
+    height: 1.25rem;
+    margin-inline: var(--space-1);
+    background: var(--color-border-dark);
+  }
+
+  &__frame {
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    min-height: 280px;
+
+    :global(.tiptap) {
+      min-height: 260px;
+      padding: var(--space-4);
+      outline: none;
+      font-size: var(--text-sm);
+      line-height: 1.55;
+      color: var(--color-text);
+    }
+
+    :global(.tiptap p) {
+      margin: 0 0 0.65em;
+    }
+
+    :global(.tiptap ul),
+    :global(.tiptap ol) {
+      margin: 0 0 0.65em;
+      padding-inline-start: 1.25rem;
+    }
+
+    :global(.tiptap h2) {
+      margin: 1rem 0 0.4em;
+      font-size: var(--text-xl);
+      font-weight: 700;
+    }
+
+    :global(.tiptap h3) {
+      margin: 0.85rem 0 0.35em;
+      font-size: var(--text-lg);
+      font-weight: 700;
+    }
+
+    :global(.tiptap a) {
+      color: var(--color-link);
+    }
+
+    :global(.tiptap hr) {
+      margin: 1rem 0;
+      border: none;
+      border-top: 1px solid var(--color-border-dark);
+    }
+  }
+
+  &__prose {
+    outline: none;
+  }
+}

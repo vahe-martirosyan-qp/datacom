@@ -1,0 +1,34 @@
+@mixin bp-md {
+  @media (min-width: 768px) {
+    @content;
+  }
+}
+
+@mixin bp-lg {
+  @media (min-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+
+  @include bp-md {
+    padding-inline: var(--space-8);
+  }
+}
+
+@mixin visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,159 @@
+@use "@/styles/mixins.scss" as mixins;
+
+.siteProjectsTeaser {
+  padding-block: var(--space-16);
+  background: var(--color-surface-alt);
+  border-block: 1px solid var(--color-border-dark);
+
+  &__inner {
+    @include mixins.container;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-10);
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-6);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: gap var(--t-normal) var(--ease-out),
+      color var(--t-fast) var(--ease-out);
+
+    &:hover {
+      gap: var(--space-4);
+      color: var(--color-accent-hover);
+    }
+  }
+
+  &__arrow {
+    display: inline-block;
+    transition: transform var(--t-normal) var(--ease-out);
+    font-size: 1.25em;
+    line-height: 1;
+  }
+
+  &__cta:hover &__arrow {
+    transform: translateX(6px);
+  }
+
+  :global(.site-lang-root[dir="rtl"]) &__cta:hover &__arrow {
+    transform: translateX(-6px);
+  }
+
+  &__grid {
+    display: grid;
+    gap: var(--space-8) var(--space-6);
+    grid-template-columns: 1fr;
+
+    @include mixins.bp-md {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include mixins.bp-lg {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    text-align: start;
+    text-decoration: none;
+    color: inherit;
+    cursor: default;
+    transition: opacity var(--t-fast) var(--ease-out);
+
+    &[href] {
+      cursor: pointer;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        opacity: 0.92;
+      }
+
+      &:hover &__img {
+        transform: scale(1.02);
+      }
+    }
+  }
+
+  &__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--color-border-dark);
+  }
+
+  &__img {
+    object-fit: cover;
+    transition: transform var(--t-slow) var(--ease-out);
+  }
+
+  &__placeholder {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      var(--color-border-dark) 0%,
+      #e8ecf2 100%
+    );
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-inline: 2px;
+  }
+
+  &__cardTitle {
+    margin: 0;
+    font-size: var(--text-lg);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
+  }
+
+  &__location {
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: 400;
+    line-height: 1.45;
+    color: var(--color-text-muted);
+  }
+
+  &__skeletonCard {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+}

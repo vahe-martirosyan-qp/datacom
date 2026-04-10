@@ -1,0 +1,12 @@
+.adminShell {
+  min-height: 100vh;
+  display: flex;
+  background: var(--color-surface);
+
+  &__main {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-8);
+    background: var(--color-surface-alt);
+  }
+}

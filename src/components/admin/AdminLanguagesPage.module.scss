@@ -1,0 +1,113 @@
+.adminLanguages {
+  max-width: 960px;
+
+  &__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+  }
+
+  &__lead {
+    margin: 0 0 var(--space-6);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--color-text-muted);
+  }
+
+  &__muted,
+  &__ok {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  &__ok {
+    color: #15803d;
+  }
+
+  &__error {
+    font-size: var(--text-sm);
+    color: #b91c1c;
+    margin-bottom: var(--space-4);
+  }
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  &__btnPrimary,
+  &__btnSecondary,
+  &__btnRemove {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    border: 1px solid var(--color-border-dark);
+  }
+
+  &__btnPrimary {
+    background: var(--color-accent);
+    color: var(--color-bg-deep);
+    border-color: transparent;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__btnSecondary {
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  &__btnRemove {
+    background: transparent;
+    color: #b91c1c;
+    border-color: transparent;
+    font-weight: 500;
+  }
+
+  &__tableWrap {
+    overflow-x: auto;
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+
+    th,
+    td {
+      padding: var(--space-3) var(--space-4);
+      text-align: left;
+      border-bottom: 1px solid var(--color-border-dark);
+    }
+
+    th {
+      font-weight: 600;
+      background: var(--color-surface-alt);
+    }
+  }
+
+  &__input,
+  &__select {
+    width: 100%;
+    min-width: 120px;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-sm);
+  }
+
+  &__checkLabel {
+    display: flex;
+    justify-content: center;
+  }
+}

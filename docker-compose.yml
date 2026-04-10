@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: datacom-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: datacom
+      POSTGRES_PASSWORD: datacom
+      POSTGRES_DB: datacom
+    # Use 5433 on the host so it does not clash with a local Postgres on 5432 (Homebrew, etc.)
+    ports:
+      - "5433:5432"
+    volumes:
+      - datacom_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U datacom -d datacom"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  datacom_pg_data:

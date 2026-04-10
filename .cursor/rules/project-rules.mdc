@@ -1,0 +1,89 @@
+---
+description: Datacom full project rules — Next 14, BEM SCSS, React Query, axios, JWT, i18n, admin RU, TipTap, content keys
+alwaysApply: true
+---
+
+# Project Rules
+
+## Stack
+
+- Next.js **14** App Router (TypeScript)
+- SCSS Modules with strict BEM: `.block`, `.block__element`, `.block__element--modifier`. Always use `&__child` nesting inside the parent class. **No utility classes.**
+- TanStack React Query **v5** for **all** API requests (**no** raw `fetch` / `axios` outside of query/mutation functions — axios only inside those functions)
+- **Axios** as the HTTP client inside query/mutation functions
+- **JWT** auth (access + refresh tokens in **httpOnly** cookies)
+- Backend: Next.js Route Handlers (`/app/api/...`) as the backend with **in-memory `contentStore`** (`src/lib/server/contentStore.ts`) for now; designed so **Prisma + PostgreSQL** (or similar) can replace the store later
+- **TipTap v3** (`@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-placeholder`, …) for **admin HTML fields** — use the shared **`TiptapRichTextEditor`** (`src/components/admin/TiptapRichTextEditor.tsx`). **Do not** add React Quill or other rich-text stacks for CMS HTML. Client editors must set **`immediatelyRender: false`** on `useEditor` (Next.js App Router / SSR).
+
+## Next.js components
+
+- Use **`next/image`** `Image` instead of `<img>` for site images.
+- Use **`next/link`** `Link` for **internal** navigation instead of `<a href="/...">`. External links may use `<a rel="noopener noreferrer" target="_blank">`.
+
+## Folder structure
+
+- `src/app/(site)/[lang]/` — public site (`page.tsx`, `layout.tsx`); URLs: `/en`, `/ru`, …
+- Dedicated routes where needed (e.g. **`/[lang]/projects`**, **`/[lang]/projects/[slug]`**) ahead of the catch-all **`/[lang]/[...slug]`** placeholder.
+- `src/app/admin/` — админка (только русский UI): `login`, `dashboard`, **`global`**, **`home`**, **`projects`**, `navigation`, `languages`, …; URLs: `/admin/...`
+- `src/app/api/` — Route Handlers
+- `src/components/site`, `src/components/admin`, `src/components/ui`
+- `src/hooks` — e.g. `useAuth`, **`useHomeContentQuery`**, **`useProjectContentQuery`**
+- `src/lib` — `api.ts` (axios), `queryClient.ts`, **`queryKeys.ts`** (`content`, **`contentProject`**), **`adminSections.ts`**, **`adminFieldKinds.ts`**, server **`contentStore`**
+- `src/styles` — `globals.scss`, `variables.scss`, `mixins.scss`
+- `src/types`
+
+## SCSS / BEM rules
+
+- Every component gets its own **`.module.scss`** file
+- Class names: `.componentName`, `.componentName__element`, `.componentName__element--modifier`
+- Inside SCSS always nest with `&__element` and `&--modifier`
+- **No** inline styles, **no** Tailwind, **no** CSS-in-JS
+- Use **CSS custom properties** for colors, spacing, typography from `variables.scss`
+
+## Content model & API (current)
+
+- Content is a flat map of **string values** per language in `contentStore`. Typical keys:
+  - **Home / global:** `home.*` (hero, footer, SEO, …).
+  - **Shared project cards (homepage teaser):** **`projects.list`** — JSON array of `{ title, location, imageUrl, href? }` (same pattern as before; **not** `home.projects.items`).
+  - **Home block copy for «Проекты»:** `home.projects.sectionTitle`, `home.projects.ctaLabel`, `home.projects.ctaHref`.
+  - **Case study page:** **`project.{slug}.title`**, **`location`**, **`year`**, **`heroImage`**, **`bodyHtml`** (HTML from TipTap), **`equipment`** (JSON string array).
+- **Reads:** `GET /api/content?lang={code}&page=home` returns **all** entries for that language bucket (including `projects.list` and `project.*` keys). **`GET /api/content?lang={code}&page=project&slug={slug}`** returns only keys with prefix **`project.{slug}.`**.
+- **Writes (admin):** `PUT /api/content/{segments}` — URL path built from the key (`project.maidens-hotel-moscow.bodyHtml` → `/api/content/project/maidens-hotel-moscow/bodyHtml`) via **`buildContentPutPath`** in `src/lib/contentUtils.ts`; body `{ lang, value }`.
+
+## API & data fetching
+
+- All public-site content is fetched via **React Query**
+- `useQuery` for reads, `useMutation` for writes
+- Central **`src/lib/queryKeys.ts`**: e.g. `queryKeys.content("home", lang)`, **`queryKeys.contentProject(lang, slug)`**
+- Every API call goes through **`src/lib/api.ts`** (axios): credentials, auth injection, **401 → refresh** then retry
+- After saving content, invalidate **`content`** queries for affected pages (home **and** any **`contentProject`** slug touched by `project.{slug}.*` keys).
+
+## i18n (public site)
+
+- Default language: **English** — URLs under `/en`; middleware redirects **`/` → `/en`**
+- Languages stored in mock/DB and fetched from **`GET /api/languages`**
+- New languages from admin (no code change for listing)
+- Translatable content keyed by **`{ key: string, lang: string }`** in the backend
+- Next.js **middleware** handles `/` redirect and language segment routing support
+
+## Admin panel rules
+
+- Admin UI: **Russian only** (no translation layer)
+- Protected by **JWT** — middleware redirects to `/admin/login` if missing/invalid
+- **Главная:** section grid + **`SectionEditorModal`** driven by **`HOME_PAGE_ADMIN_SECTIONS`** / **`GLOBAL_ADMIN_SECTIONS`** in `adminSections.ts`.
+- **Проекты (кейсы):** **`/admin/projects`** — список из **`projects.list`**; **`/admin/projects/[slug]`** — поля кейса; длинный текст — **TipTap** для **`*.bodyHtml`**.
+- Editable fields: **«Редактировать»** opens modal with **normal controls** (inputs, textareas, structured JSON editors, **TipTap** for HTML). **Do not** make admins edit raw JSON for card grids — use the dedicated editors; only **`equipment`** and similar may stay as JSON in a textarea when no bespoke UI exists.
+- Saves via **`useMutation`** (optimistic updates where practical)
+- Admin layout: **left sidebar** (`AdminSidebar.tsx`) listing main areas
+
+## Static vs dynamic
+
+**Static (hardcoded):** page layout/structure (grid, component order), SCSS, admin labels (Russian), auth **flow** (not secrets).
+
+**Dynamic (from BE):** all visible public text, images/media, nav links/labels, SEO per page/lang, language list, section field values, project HTML bodies and lists.
+
+## Code quality
+
+- TypeScript interfaces for components; **`any` is forbidden**
+- Loading and **error** states for every query; **skeleton** loaders for content sections
+- **Mobile-first** responsive SCSS (breakpoints in `mixins.scss` / `variables.scss`)

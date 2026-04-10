@@ -1,0 +1,130 @@
+@use "@/styles/mixins.scss" as mixins;
+
+.siteHero {
+  position: relative;
+  color: var(--color-text-inverse);
+  background: var(--color-bg-deep);
+  overflow: hidden;
+
+  &__media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        100deg,
+        rgba(8, 12, 17, 0.94) 0%,
+        rgba(8, 12, 17, 0.65) 45%,
+        rgba(8, 12, 17, 0.4) 100%
+      );
+    }
+  }
+
+  &__image {
+    object-fit: cover;
+    transform: scale(1.06);
+    animation: heroKenburns 22s var(--ease-soft) infinite alternate;
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+    @include mixins.container;
+    padding-block: clamp(4rem, 12vw, 7rem) var(--space-12);
+    min-height: min(82vh, 760px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-6);
+  }
+
+  &__title {
+    margin: 0;
+    max-width: 22ch;
+    font-size: var(--text-5xl);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    animation: heroFadeUp 0.85s var(--ease-out) both;
+  }
+
+  &__subtitle {
+    margin: 0;
+    max-width: 54ch;
+    font-size: var(--text-lg);
+    line-height: 1.6;
+    color: var(--color-text-inverse-muted);
+    animation: heroFadeUp 0.85s var(--ease-out) 0.1s both;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+    animation: heroFadeUp 0.85s var(--ease-out) 0.18s both;
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-3) var(--space-10);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-bg-deep);
+    background: var(--color-accent);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: background var(--t-fast) var(--ease-out),
+      transform var(--t-normal) var(--ease-out),
+      box-shadow var(--t-normal) var(--ease-out);
+
+    &:hover {
+      background: var(--color-accent-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(255, 106, 0, 0.42);
+    }
+
+    &:active {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroKenburns {
+  from {
+    transform: scale(1.04) translate(0, 0);
+  }
+  to {
+    transform: scale(1.1) translate(-1%, -0.5%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .siteHero__image {
+    animation: none;
+    transform: none;
+  }
+
+  .siteHero__title,
+  .siteHero__subtitle,
+  .siteHero__actions {
+    animation: none;
+  }
+}

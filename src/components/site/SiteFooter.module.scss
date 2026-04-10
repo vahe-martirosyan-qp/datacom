@@ -1,0 +1,120 @@
+@use "@/styles/mixins.scss" as mixins;
+
+.siteFooter {
+  background: var(--color-bg-header);
+  color: var(--color-text-inverse);
+  padding-block: var(--space-16) var(--space-8);
+  border-top: 1px solid var(--color-border);
+
+  &__inner {
+    @include mixins.container;
+  }
+
+  &__top {
+    display: grid;
+    gap: var(--space-10);
+    margin-bottom: var(--space-12);
+
+    @include mixins.bp-lg {
+      grid-template-columns: 1.2fr 2fr;
+    }
+  }
+
+  &__brand {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    margin: 0 0 var(--space-3);
+  }
+
+  &__tagline {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-inverse-muted);
+  }
+
+  &__contacts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  &__phone {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-text-inverse);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-accent);
+    }
+  }
+
+  &__phoneNote {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-inverse-muted);
+  }
+
+  &__email {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-accent-hover);
+    }
+  }
+
+  &__emailNote {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-inverse-muted);
+  }
+
+  &__columns {
+    display: grid;
+    gap: var(--space-8);
+    grid-template-columns: 1fr;
+
+    @include mixins.bp-md {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__colTitle {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-inverse-muted);
+  }
+
+  &__colList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  &__colLink {
+    font-size: var(--text-sm);
+    color: var(--color-text-inverse-muted);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-text-inverse);
+    }
+  }
+
+  &__bottom {
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-xs);
+    color: var(--color-text-inverse-muted);
+    text-align: center;
+  }
+}

@@ -1,0 +1,77 @@
+@use "@/styles/mixins.scss" as mixins;
+
+.siteSpotlight {
+  padding-block: var(--space-8) var(--space-4);
+  background: var(--color-surface-alt);
+
+  &__inner {
+    @include mixins.container;
+  }
+
+  &__grid {
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: 1fr;
+
+    @include mixins.bp-md {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-6) var(--space-7);
+    min-height: 120px;
+    background: linear-gradient(
+      135deg,
+      var(--color-surface) 0%,
+      rgba(255, 106, 0, 0.06) 100%
+    );
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: var(--color-text);
+    box-shadow: var(--shadow-soft);
+    transition: transform var(--t-normal) var(--ease-out),
+      border-color var(--t-normal) var(--ease-out),
+      box-shadow var(--t-slow) var(--ease-out);
+
+    &:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 106, 0, 0.45);
+      box-shadow: var(--shadow-card-hover);
+    }
+  }
+
+  &__title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    padding-right: var(--space-8);
+  }
+
+  &__desc {
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    color: var(--color-text-muted);
+    max-width: 42ch;
+  }
+
+  &__arrow {
+    position: absolute;
+    right: var(--space-6);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--text-xl);
+    color: var(--color-accent);
+    transition: transform var(--t-normal) var(--ease-out);
+  }
+
+  &__card:hover &__arrow {
+    transform: translateY(-50%) translateX(4px);
+  }
+}

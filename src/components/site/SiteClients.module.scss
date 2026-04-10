@@ -1,0 +1,46 @@
+@use "@/styles/mixins.scss" as mixins;
+
+.siteClients {
+  padding-block: var(--space-16);
+  background: var(--color-surface-alt);
+
+  &__inner {
+    @include mixins.container;
+    text-align: center;
+  }
+
+  &__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__subtitle {
+    margin: 0 auto var(--space-10);
+    max-width: 48ch;
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    line-height: 1.55;
+  }
+
+  &__brands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    justify-content: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__brand {
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-md);
+  }
+}

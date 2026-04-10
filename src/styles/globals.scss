@@ -1,0 +1,57 @@
+@use "./variables.scss";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* RTL: global utility classes used next to CSS-module classes */
+.site-lang-root[dir="rtl"] [data-site-header] .u-headerChevron {
+  transform: scaleX(-1);
+}
+
+.site-lang-root[dir="ltr"] .u-rtlSlideEnd:hover,
+.site-lang-root:not([dir="rtl"]) .u-rtlSlideEnd:hover {
+  transform: translateX(4px);
+}
+
+.site-lang-root[dir="rtl"] .u-rtlSlideEnd:hover {
+  transform: translateX(-4px);
+}

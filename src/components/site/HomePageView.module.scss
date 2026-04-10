@@ -1,0 +1,21 @@
+.homePageView {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  &__error {
+    min-height: 50vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8);
+  }
+
+  &__errorText {
+    margin: 0;
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    text-align: center;
+    max-width: 40ch;
+  }
+}

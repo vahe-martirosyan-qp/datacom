@@ -1,0 +1,10 @@
+---
+description: Use pnpm for all package management in this repo
+alwaysApply: true
+---
+
+# Package manager
+
+- Use **pnpm** only: `pnpm install`, `pnpm add <pkg>`, `pnpm dlx`, `pnpm run <script>`.
+- Do not add or commit `package-lock.json` or `yarn.lock`. Commit `pnpm-lock.yaml`.
+- The repo pins the pnpm version via the `packageManager` field in `package.json`; prefer `corepack enable` so that version is used automatically.

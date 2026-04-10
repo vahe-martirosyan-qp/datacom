@@ -1,0 +1,69 @@
+@use "@/styles/mixins.scss" as mixins;
+
+.siteFeatures {
+  padding-block: var(--space-20);
+  background: var(--color-surface-alt);
+
+  &__inner {
+    @include mixins.container;
+  }
+
+  &__title {
+    margin: 0 0 var(--space-12);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    text-align: center;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+  }
+
+  &__grid {
+    display: grid;
+    gap: var(--space-6);
+    grid-template-columns: 1fr;
+
+    @include mixins.bp-md {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include mixins.bp-lg {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__card {
+    padding: var(--space-8) var(--space-6);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    transition: transform var(--t-normal) var(--ease-out),
+      box-shadow var(--t-slow) var(--ease-out),
+      border-color var(--t-normal) var(--ease-out);
+
+    &:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255, 106, 0, 0.35);
+      box-shadow: var(--shadow-card-hover);
+    }
+  }
+
+  &__cardTitle {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--color-text);
+    transition: color var(--t-fast) var(--ease-out);
+  }
+
+  &__card:hover &__cardTitle {
+    color: var(--color-accent);
+  }
+
+  &__cardDesc {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+}

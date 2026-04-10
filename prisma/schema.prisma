@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Language {
+  code   String  @id @db.VarChar(32)
+  name   String
+  active Boolean @default(true)
+  dir    String  @default("ltr") @db.VarChar(3)
+}
+
+/// Flat CMS key/value per locale (same model as the former JSON file store).
+model ContentEntry {
+  langCode String @db.VarChar(32)
+  key      String @db.VarChar(512)
+  value    String @db.Text
+  type     String @default("text") @db.VarChar(16)
+
+  @@id([langCode, key])
+  @@index([langCode])
+}
