@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { entriesToMap, parseJsonArray } from "@/lib/contentUtils";
 import { useHomeContentQuery } from "@/hooks/useHomeContentQuery";
 import { useLanguagesQuery } from "@/hooks/useLanguagesQuery";
 import { useProjectContentQuery } from "@/hooks/useProjectContentQuery";
+import { logCmsDebug } from "@/lib/cmsDebugLog";
 import { SiteChrome } from "./SiteChrome";
 import styles from "./ProjectPageView.module.scss";
 
@@ -50,6 +51,52 @@ export function ProjectPageView({ lang, slug }: ProjectPageViewProps) {
   const homeLabel = homeMap["home.header.logoText"]?.trim() || "Home";
   const projectsLabel =
     homeMap["home.projects.sectionTitle"]?.trim() || "Projects";
+
+  useEffect(() => {
+    if (isLoading || !projectQuery.data) {
+      return;
+    }
+    const { page, lang: pageLang, entries } = projectQuery.data;
+    const byKey = entries.map((e) => ({
+      id: e.key,
+      type: e.type,
+      valueChars: e.value.length,
+      valuePreview:
+        e.key.endsWith("bodyHtml") || e.key.endsWith("equipment")
+          ? "(html/json — truncated in log)"
+          : e.value.length > 120
+            ? `${e.value.slice(0, 120)}…`
+            : e.value,
+    }));
+    logCmsDebug("project.page", {
+      page,
+      lang: pageLang,
+      slug,
+      entryCount: entries.length,
+      keys: entries.map((e) => e.key),
+      entries: byKey,
+      derived: {
+        title,
+        location,
+        year,
+        heroImagePreview: heroImage
+          ? `${heroImage.slice(0, 96)}${heroImage.length > 96 ? "…" : ""}`
+          : null,
+        bodyHtmlChars: bodyHtml.length,
+        equipmentLines: equipment.length,
+      },
+    });
+  }, [
+    isLoading,
+    projectQuery.data,
+    slug,
+    title,
+    location,
+    year,
+    heroImage,
+    bodyHtml,
+    equipment.length,
+  ]);
 
   return (
     <SiteChrome

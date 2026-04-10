@@ -2,8 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { buildLocalizedHref, parseJsonArray } from "@/lib/contentUtils";
+import { logCmsDebug } from "@/lib/cmsDebugLog";
+import { projectSlugFromCardHref } from "@/lib/projectHrefUtils";
 import type { ProjectCardItem } from "@/types/site";
 import styles from "./SiteProjectsTeaser.module.scss";
 
@@ -72,11 +75,42 @@ export function SiteProjectsTeaser({
   const ctaLabel = map["home.projects.ctaLabel"] ?? "";
   const ctaHrefRaw = map["home.projects.ctaHref"] ?? "projects";
   const href = buildLocalizedHref(lang, ctaHrefRaw);
-  const allItems = parseJsonArray<ProjectCardItem>(
-    map["projects.list"] ?? map["home.projects.items"] ?? "[]",
-    []
+  const listSource = map["projects.list"]
+    ? "projects.list"
+    : map["home.projects.items"]
+      ? "home.projects.items"
+      : "none";
+  const rawList =
+    map["projects.list"] ?? map["home.projects.items"] ?? "[]";
+  const allItems = useMemo(
+    () => parseJsonArray<ProjectCardItem>(rawList, []),
+    [rawList]
   );
   const items = allItems.slice(0, HOME_PROJECTS_TEASER_LIMIT);
+
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+    const cards = allItems.map((item, index) => {
+      const url = item.imageUrl?.trim() ?? "";
+      return {
+        index,
+        slug: projectSlugFromCardHref(item.href),
+        title: item.title,
+        href: item.href ?? null,
+        imageUrlPreview: url ? `${url.slice(0, 96)}${url.length > 96 ? "…" : ""}` : null,
+      };
+    });
+    logCmsDebug("homepage.projects", {
+      lang,
+      listSource,
+      totalInList: allItems.length,
+      teaserLimit: HOME_PROJECTS_TEASER_LIMIT,
+      teaserCount: items.length,
+      cards,
+    });
+  }, [isLoading, lang, listSource, allItems, items.length]);
 
   if (isLoading) {
     return (

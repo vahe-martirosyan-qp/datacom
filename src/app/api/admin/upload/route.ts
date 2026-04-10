@@ -1,9 +1,12 @@
 import { randomUUID } from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { assertAdminSession } from "@/lib/server/adminSession";
 import { registerUpload, type UploadRecord } from "@/lib/server/uploadRegistry";
+
+export const runtime = "nodejs";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
@@ -56,13 +59,34 @@ export async function POST(request: Request) {
 
   const id = randomUUID();
   const filename = `${id}${ext}`;
-  const relativeDir = path.join("uploads", "projects");
-  const publicDir = path.join(process.cwd(), "public", relativeDir);
-  await mkdir(publicDir, { recursive: true });
-  const diskPath = path.join(publicDir, filename);
-  await writeFile(diskPath, buf);
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
 
-  const url = `/${relativeDir.replace(/\\/g, "/")}/${filename}`;
+  let url: string;
+
+  if (token) {
+    const result = await put(`projects/${filename}`, buf, {
+      access: "public",
+      token,
+      contentType: mime,
+    });
+    url = result.url;
+  } else if (process.env.VERCEL) {
+    return NextResponse.json(
+      {
+        error:
+          "На Vercel нужен Vercel Blob: создайте store в Dashboard → Storage → Blob и добавьте BLOB_READ_WRITE_TOKEN в переменные окружения.",
+      },
+      { status: 503 }
+    );
+  } else {
+    const relativeDir = path.join("uploads", "projects");
+    const publicDir = path.join(process.cwd(), "public", relativeDir);
+    await mkdir(publicDir, { recursive: true });
+    const diskPath = path.join(publicDir, filename);
+    await writeFile(diskPath, buf);
+    url = `/${relativeDir.replace(/\\/g, "/")}/${filename}`;
+  }
+
   const record: UploadRecord = {
     id,
     url,

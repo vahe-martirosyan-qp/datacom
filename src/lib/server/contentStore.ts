@@ -1505,16 +1505,20 @@ export async function ensureLangContentBucket(langCode: string): Promise<void> {
   }
 }
 
-/** Same hero resolution as project page: current lang, then EN fallback. */
-function resolveProjectHeroImageForLang(slug: string, lang: string): string {
-  const heroKey = `project.${slug}.heroImage`;
+/** Same field resolution as project page: current lang bucket, then EN fallback. */
+function resolveProjectFieldForLang(
+  slug: string,
+  lang: string,
+  field: "heroImage" | "title" | "location"
+): string {
+  const key = `project.${slug}.${field}`;
   const bucket = byLang[lang] ?? byLang.en;
-  const direct = bucket[heroKey]?.value?.trim();
+  const direct = bucket[key]?.value?.trim();
   if (direct) {
     return direct;
   }
   if (lang !== "en" && byLang.en) {
-    const enVal = byLang.en[heroKey]?.value?.trim();
+    const enVal = byLang.en[key]?.value?.trim();
     if (enVal) {
       return enVal;
     }
@@ -1523,10 +1527,10 @@ function resolveProjectHeroImageForLang(slug: string, lang: string): string {
 }
 
 /**
- * Homepage teaser cards store their own `imageUrl` in `projects.list`. When a card links to a
- * case study, use `project.{slug}.heroImage` so the main project image and the home grid stay in sync.
+ * Homepage teaser cards (`projects.list`) can duplicate slug/title/image. When `href` points at a
+ * case study, overlay hero, title, and location from `project.{slug}.*` (same source as the project page).
  */
-function mergeHeroIntoProjectCardsJson(raw: string, lang: string): string {
+function mergeProjectFieldsIntoProjectCardsJson(raw: string, lang: string): string {
   let items: ProjectCardItem[] = [];
   try {
     const parsed = JSON.parse(raw ?? "[]") as unknown;
@@ -1540,15 +1544,27 @@ function mergeHeroIntoProjectCardsJson(raw: string, lang: string): string {
     if (!slug) {
       return item;
     }
-    const hero = resolveProjectHeroImageForLang(slug, lang);
-    if (!hero) {
-      return item;
+    let out = item;
+
+    const hero = resolveProjectFieldForLang(slug, lang, "heroImage");
+    if (hero && (out.imageUrl ?? "").trim() !== hero) {
+      out = { ...out, imageUrl: hero };
+      changed = true;
     }
-    if ((item.imageUrl ?? "").trim() === hero) {
-      return item;
+
+    const title = resolveProjectFieldForLang(slug, lang, "title");
+    if (title && (out.title ?? "").trim() !== title) {
+      out = { ...out, title };
+      changed = true;
     }
-    changed = true;
-    return { ...item, imageUrl: hero };
+
+    const location = resolveProjectFieldForLang(slug, lang, "location");
+    if (location && (out.location ?? "").trim() !== location) {
+      out = { ...out, location };
+      changed = true;
+    }
+
+    return out;
   });
   return changed ? JSON.stringify(next) : raw;
 }
@@ -1565,7 +1581,7 @@ export function getPageContent(
     );
     return entries.map((e) => {
       if (e.key === "projects.list" || e.key === "home.projects.items") {
-        const next = mergeHeroIntoProjectCardsJson(e.value, lang);
+        const next = mergeProjectFieldsIntoProjectCardsJson(e.value, lang);
         return next === e.value ? e : { ...e, value: next };
       }
       return e;
