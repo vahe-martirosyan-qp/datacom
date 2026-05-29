@@ -35,7 +35,7 @@ interface SectionEditorModalProps {
   section: AdminSectionDef | null;
   lang: string;
   contentMap: Record<string, string>;
-  /** `embedded` — форма на странице без затемнённого оверлея (например `/admin/projects/[slug]`). */
+  /** `embedded` — форма на странице без затемнённого оверлея (например `/admin/projects/[projectId]`). */
   variant?: "modal" | "embedded";
   /**
    * Keys whose values are written to every `syncLanguageCodes` locale on save
@@ -43,7 +43,7 @@ interface SectionEditorModalProps {
    */
   syncKeysAcrossLanguages?: string[];
   /**
-   * When set (e.g. all active CMS codes on `/admin/projects/[slug]`), used to invalidate every
+   * When set (e.g. all active CMS codes on `/admin/projects/[projectId]`), used to invalidate every
    * locale after a project save. Also required when `syncKeysAcrossLanguages` is used.
    */
   syncLanguageCodes?: string[];
@@ -168,19 +168,19 @@ export function SectionEditorModal({
       await queryClient.invalidateQueries({
         queryKey: queryKeys.content("home", payload.lang),
       });
-      const slugs = new Set<string>();
+      const projectSegments = new Set<string>();
       for (const k of Object.keys(payload.values)) {
         const m = k.match(/^project\.([^.]+)\./);
         if (m?.[1]) {
-          slugs.add(m[1]);
+          projectSegments.add(m[1]);
         }
       }
-      /** Project saves: refresh every locale for this slug (hero is shared; fields differ per lang). */
+      /** Project saves: refresh every locale for this segment (hero is shared; fields differ per lang). */
       const langsToRefresh =
-        syncLangs && (syncKeys.length > 0 || slugs.size > 0)
+        syncLangs && (syncKeys.length > 0 || projectSegments.size > 0)
           ? syncLangs
           : [payload.lang];
-      for (const s of slugs) {
+      for (const s of projectSegments) {
         for (const lc of langsToRefresh) {
           await queryClient.invalidateQueries({
             queryKey: queryKeys.contentProject(lc, s),

@@ -6,10 +6,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { entriesToMap, parseJsonArray } from "@/lib/contentUtils";
-import {
-  normalizeNewProjectSlug,
-  projectSlugFromCardHref,
-} from "@/lib/projectHrefUtils";
+import { projectKeySegmentFromCardHref } from "@/lib/projectHrefUtils";
 import { useHomeContentQuery } from "@/hooks/useHomeContentQuery";
 import { useLanguagesQuery } from "@/hooks/useLanguagesQuery";
 import { api } from "@/lib/api";
@@ -31,33 +28,31 @@ export function AdminProjectsListClient() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const contentQuery = useHomeContentQuery("ru");
-  const [newSlug, setNewSlug] = useState("");
   const [addHomeCard, setAddHomeCard] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
 
   const createProject = useMutation({
-    mutationFn: async (payload: { slug: string; addHomeCard: boolean }) => {
-      const { data } = await api.post<{ ok: boolean; slug: string }>(
+    mutationFn: async (payload: { addHomeCard: boolean }) => {
+      const { data } = await api.post<{ ok: boolean; id: string }>(
         "/admin/projects",
         payload
       );
-      if (!data?.slug) {
-        throw new Error("NO_SLUG");
+      if (!data?.id) {
+        throw new Error("NO_ID");
       }
-      return data.slug;
+      return data.id;
     },
     onError: (err) => {
-      if (err instanceof Error && err.message === "NO_SLUG") {
-        setFormError("Сервер не вернул slug. Обновите страницу и попробуйте снова.");
+      if (err instanceof Error && err.message === "NO_ID") {
+        setFormError("Сервер не вернул id. Обновите страницу и попробуйте снова.");
         return;
       }
       setFormError(getApiErrorMessage(err));
     },
-    onSuccess: async (slug) => {
+    onSuccess: async (id) => {
       setFormError(null);
-      setNewSlug("");
       await queryClient.invalidateQueries({ queryKey: ["content", "home"] });
-      await router.push(`/admin/projects/${encodeURIComponent(slug)}`);
+      await router.push(`/admin/projects/${encodeURIComponent(id)}`);
     },
   });
 
@@ -67,25 +62,12 @@ export function AdminProjectsListClient() {
     if (createProject.isPending) {
       return;
     }
-    const trimmed = newSlug.trim();
-    if (!trimmed) {
-      setFormError(
-        "Сначала введите slug в поле выше (латиница, цифры и дефисы, например riverside-sochi)."
-      );
-      return;
-    }
-    if (!normalizeNewProjectSlug(trimmed)) {
-      setFormError(
-        "Некорректный slug: только строчные латинские буквы, цифры и дефисы, без пробелов."
-      );
-      return;
-    }
-    createProject.mutate({ slug: trimmed, addHomeCard });
+    createProject.mutate({ addHomeCard });
   };
 
   const deleteProject = useMutation({
-    mutationFn: async (slug: string) => {
-      await api.delete(`/admin/projects/${encodeURIComponent(slug)}`);
+    mutationFn: async (segment: string) => {
+      await api.delete(`/admin/projects/${encodeURIComponent(segment)}`);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["content", "home"] });
@@ -93,42 +75,45 @@ export function AdminProjectsListClient() {
     },
   });
 
-  const handleDeleteFully = (slug: string) => {
+  const handleDeleteFully = (segment: string) => {
     if (
       !window.confirm(
-        `Полностью удалить кейс «${slug}» для всех языков в этой базе? ` +
-          `Сотрутся все ключи project.${slug}.* и ссылки на кейс в projects.list / home.projects.items по каждой локали. ` +
+        `Полностью удалить кейс «${segment}» для всех языков в этой базе? ` +
+          `Сотрутся все ключи project.${segment}.* и ссылки на кейс в projects.list / home.projects.items по каждой локали. ` +
           `Другие серверы или базы (другие «окружения») не затрагиваются. Действие необратимо.`
       )
     ) {
       return;
     }
-    deleteProject.mutate(slug);
+    deleteProject.mutate(segment);
   };
 
-  const { slugs, thumbBySlug } = useMemo(() => {
+  const { segments, thumbBySegment } = useMemo(() => {
     if (!contentQuery.data) {
-      return { slugs: [] as string[], thumbBySlug: {} as Record<string, string> };
+      return {
+        segments: [] as string[],
+        thumbBySegment: {} as Record<string, string>,
+      };
     }
     const map = entriesToMap(contentQuery.data.entries);
     const raw = map["projects.list"] ?? map["home.projects.items"] ?? "[]";
     const items = parseJsonArray<ProjectCardItem>(raw, []);
-    const slugSet = new Set<string>();
+    const segmentSet = new Set<string>();
     const thumbs: Record<string, string> = {};
     for (const item of items) {
-      const s = projectSlugFromCardHref(item.href);
+      const s = projectKeySegmentFromCardHref(item.href);
       if (!s) {
         continue;
       }
-      slugSet.add(s);
+      segmentSet.add(s);
       const u = item.imageUrl?.trim();
       if (u && !thumbs[s]) {
         thumbs[s] = u;
       }
     }
     return {
-      slugs: [...slugSet].sort((a, b) => a.localeCompare(b)),
-      thumbBySlug: thumbs,
+      segments: [...segmentSet].sort((a, b) => a.localeCompare(b)),
+      thumbBySegment: thumbs,
     };
   }, [contentQuery.data]);
 
@@ -146,8 +131,9 @@ export function AdminProjectsListClient() {
     <div className={styles.adminOverview}>
       <h1 className={styles.adminOverview__title}>Проекты (кейсы)</h1>
       <p className={styles.adminOverview__lead}>
-        Создайте проект и откройте его для редактирования контента страницы кейса. Список ниже строится
-        по карточкам главной (<code>projects.list</code>); сами карточки настраиваются в разделе{" "}
+        Новый кейс получает уникальный id (UUID); страница на сайте —{" "}
+        <code>/…/projects/&lt;id&gt;</code>. Список ниже строится по карточкам главной (
+        <code>projects.list</code>); сами карточки настраиваются в разделе{" "}
         <Link href="/admin/home">главной</Link>, блок «Проекты».
       </p>
 
@@ -157,22 +143,6 @@ export function AdminProjectsListClient() {
         aria-label="Новый проект"
         noValidate
       >
-        <label className={styles.adminProjectsCreate__field}>
-          <span className={styles.adminProjectsCreate__label}>
-            Slug (в URL: <code>/…/projects/slug</code>)
-          </span>
-          <input
-            className={styles.adminProjectsCreate__input}
-            value={newSlug}
-            onChange={(e) => {
-              setNewSlug(e.target.value);
-              setFormError(null);
-            }}
-            placeholder="например riverside-sochi"
-            autoComplete="off"
-            spellCheck={false}
-          />
-        </label>
         <label className={styles.adminProjectsCreate__check}>
           <input
             type="checkbox"
@@ -201,9 +171,9 @@ export function AdminProjectsListClient() {
             <Skeleton key={i} variant="card" />
           ))}
         </div>
-      ) : slugs.length === 0 ? (
+      ) : segments.length === 0 ? (
         <p className={styles.adminOverview__lead}>
-          Пока нет карточек с ссылкой <code>projects/slug</code> в{" "}
+          Пока нет карточек со ссылкой <code>projects/…</code> в{" "}
           <code>projects.list</code>. Создайте проект выше (с галочкой «добавить на главную») или
           добавьте карточки в разделе <Link href="/admin/home">главной</Link>.
         </p>
@@ -213,17 +183,17 @@ export function AdminProjectsListClient() {
             Проекты
           </h2>
           <ul className={styles.adminProjectsList}>
-            {slugs.map((s) => (
+            {segments.map((s) => (
               <li key={s} className={styles.adminProjectsList__item}>
                 <div className={styles.adminProjectsList__row}>
                   <div
                     className={styles.adminProjectsList__thumbWrap}
                     aria-hidden
                   >
-                    {thumbBySlug[s] ? (
+                    {thumbBySegment[s] ? (
                       // eslint-disable-next-line @next/next/no-img-element -- admin preview of CMS URLs
                       <img
-                        src={thumbBySlug[s]}
+                        src={thumbBySegment[s]}
                         alt=""
                         className={styles.adminProjectsList__thumb}
                       />

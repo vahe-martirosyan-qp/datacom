@@ -1,11 +1,11 @@
 import type { AdminSectionDef } from "@/lib/adminSections";
 
-/** Keys edited on `/admin/projects/[slug]` for one case study. */
-export function buildProjectSectionDef(slug: string): AdminSectionDef {
-  const p = `project.${slug}`;
+/** Keys edited on `/admin/projects/[projectId]` for one case study. */
+export function buildProjectSectionDef(projectKeySegment: string): AdminSectionDef {
+  const p = `project.${projectKeySegment}`;
   return {
-    id: `project-${slug}`,
-    title: `Проект: ${slug}`,
+    id: `project-${projectKeySegment}`,
+    title: `Проект: ${projectKeySegment}`,
     description:
       "Карточка кейса на сайте: заголовок, локация, год, изображение, текст (TipTap), список оборудования (JSON).",
     keys: [

@@ -14,12 +14,13 @@ import styles from "./ProjectPageView.module.scss";
 
 interface ProjectPageViewProps {
   lang: string;
-  slug: string;
+  /** CMS key segment: UUID or legacy slug (must match `project.{segment}.*`). */
+  projectId: string;
 }
 
-export function ProjectPageView({ lang, slug }: ProjectPageViewProps) {
+export function ProjectPageView({ lang, projectId }: ProjectPageViewProps) {
   const homeQuery = useHomeContentQuery(lang);
-  const projectQuery = useProjectContentQuery(lang, slug);
+  const projectQuery = useProjectContentQuery(lang, projectId);
   const languagesQuery = useLanguagesQuery();
 
   const homeMap = useMemo(
@@ -34,7 +35,7 @@ export function ProjectPageView({ lang, slug }: ProjectPageViewProps) {
     [projectQuery.data]
   );
 
-  const prefix = `project.${slug}`;
+  const prefix = `project.${projectId}`;
   const title = map[`${prefix}.title`] ?? "";
   const location = map[`${prefix}.location`] ?? "";
   const year = map[`${prefix}.year`] ?? "";
@@ -71,7 +72,7 @@ export function ProjectPageView({ lang, slug }: ProjectPageViewProps) {
     logCmsDebug("project.page", {
       page,
       lang: pageLang,
-      slug,
+      projectId,
       entryCount: entries.length,
       keys: entries.map((e) => e.key),
       entries: byKey,
@@ -89,7 +90,7 @@ export function ProjectPageView({ lang, slug }: ProjectPageViewProps) {
   }, [
     isLoading,
     projectQuery.data,
-    slug,
+    projectId,
     title,
     location,
     year,
@@ -107,7 +108,7 @@ export function ProjectPageView({ lang, slug }: ProjectPageViewProps) {
       loadError={homeQuery.isError || projectQuery.isError}
     >
       <article
-        key={`${lang}-${slug}`}
+        key={`${lang}-${projectId}`}
         className={styles.projectPage}
         lang={lang}
       >
@@ -124,7 +125,7 @@ export function ProjectPageView({ lang, slug }: ProjectPageViewProps) {
               {projectsLabel}
             </Link>
             <span aria-hidden> / </span>
-            <span>{title || slug}</span>
+            <span>{title || projectId}</span>
           </nav>
 
           {isLoading ? (

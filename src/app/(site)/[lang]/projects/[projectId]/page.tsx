@@ -1,6 +1,11 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ProjectPageView } from "@/components/site/ProjectPageView";
 import { entriesToMap } from "@/lib/contentUtils";
+import {
+  legacySeedSlugToUuid,
+  normalizeNewProjectSlug,
+  resolveProjectKeySegment,
+} from "@/lib/projectHrefUtils";
 import {
   ensureContentStoreHydrated,
   getLanguages,
@@ -8,7 +13,7 @@ import {
 } from "@/lib/server/contentStore";
 
 interface Props {
-  params: { lang: string; slug: string };
+  params: { lang: string; projectId: string };
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -23,17 +28,18 @@ export async function generateMetadata({ params }: Props) {
     (homeMap["home.seo.title"] ?? "Datacom").split(/[—–-]/)[0]?.trim() ??
     "Datacom";
 
-  const projectEntries = getPageContent(
-    params.lang,
-    "project",
-    params.slug
-  );
+  const segment = resolveProjectKeySegment(params.projectId);
+  if (!segment) {
+    return { title: siteName };
+  }
+
+  const projectEntries = getPageContent(params.lang, "project", segment);
   if (!projectEntries) {
     return { title: siteName };
   }
   const pmap = entriesToMap(projectEntries);
   const title =
-    pmap[`project.${params.slug}.title`]?.trim() || params.slug;
+    pmap[`project.${segment}.title`]?.trim() || params.projectId;
   return {
     title: `${title} — ${siteName}`,
   };
@@ -46,16 +52,29 @@ export default async function SiteProjectDetailPage({ params }: Props) {
     notFound();
   }
 
-  const projectEntries = getPageContent(
-    params.lang,
-    "project",
-    params.slug
-  );
+  let rawParam = params.projectId;
+  try {
+    rawParam = decodeURIComponent(rawParam);
+  } catch {
+    notFound();
+  }
+  const legacySlug = normalizeNewProjectSlug(rawParam);
+  const seedUuid = legacySlug ? legacySeedSlugToUuid(legacySlug) : null;
+  if (seedUuid) {
+    redirect(`/${params.lang}/projects/${seedUuid}`);
+  }
+
+  const segment = resolveProjectKeySegment(params.projectId);
+  if (!segment) {
+    notFound();
+  }
+
+  const projectEntries = getPageContent(params.lang, "project", segment);
   if (!projectEntries) {
     notFound();
   }
 
   return (
-    <ProjectPageView lang={params.lang} slug={params.slug} />
+    <ProjectPageView lang={params.lang} projectId={segment} />
   );
 }

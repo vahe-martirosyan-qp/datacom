@@ -6,7 +6,10 @@ import { useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { buildLocalizedHref, parseJsonArray } from "@/lib/contentUtils";
 import { logCmsDebug } from "@/lib/cmsDebugLog";
-import { projectSlugFromCardHref } from "@/lib/projectHrefUtils";
+import {
+  canonicalizeProjectCardHref,
+  projectKeySegmentFromCardHref,
+} from "@/lib/projectHrefUtils";
 import type { ProjectCardItem } from "@/types/site";
 import styles from "./SiteProjectsTeaser.module.scss";
 
@@ -27,8 +30,9 @@ export function SiteProjectsTeaserCard({
   item: ProjectCardItem;
 }) {
   const hasImage = Boolean(item.imageUrl?.trim());
-  const href = item.href?.trim()
-    ? buildLocalizedHref(lang, item.href.trim())
+  const rawHref = item.href?.trim();
+  const href = rawHref
+    ? buildLocalizedHref(lang, canonicalizeProjectCardHref(rawHref))
     : null;
 
   const body = (
@@ -96,7 +100,7 @@ export function SiteProjectsTeaser({
       const url = item.imageUrl?.trim() ?? "";
       return {
         index,
-        slug: projectSlugFromCardHref(item.href),
+        projectKeySegment: projectKeySegmentFromCardHref(item.href),
         title: item.title,
         href: item.href ?? null,
         imageUrlPreview: url ? `${url.slice(0, 96)}${url.length > 96 ? "…" : ""}` : null,

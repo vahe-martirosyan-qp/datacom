@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { api } from "@/lib/api";
 import { buildProjectSectionDef } from "@/lib/adminProjectSection";
 import { entriesToMap } from "@/lib/contentUtils";
+import { resolveProjectKeySegment } from "@/lib/projectHrefUtils";
 import { queryKeys } from "@/lib/queryKeys";
 import { useLanguagesQuery } from "@/hooks/useLanguagesQuery";
 import { fetchProjectContent } from "@/hooks/useProjectContentQuery";
@@ -21,11 +22,11 @@ const FALLBACK_LANGUAGES: { code: string; name: string }[] = [
 ];
 
 interface AdminProjectSlugClientProps {
-  slug: string;
+  projectId: string;
 }
 
-function projectHeroImageKey(slug: string): string {
-  return `project.${slug}.heroImage`;
+function projectHeroImageKey(segment: string): string {
+  return `project.${segment}.heroImage`;
 }
 
 /**
@@ -33,12 +34,12 @@ function projectHeroImageKey(slug: string): string {
  * (Previously `en` always won, so after saving from RU an outdated EN URL could mask the new image.)
  */
 function resolveSharedHeroImage(
-  slug: string,
+  segment: string,
   queries: { data?: HomeContentResponse }[],
   langCodes: string[],
   preferLang: string
 ): string {
-  const key = projectHeroImageKey(slug);
+  const key = projectHeroImageKey(segment);
   const order: string[] = [];
   if (preferLang && langCodes.includes(preferLang)) {
     order.push(preferLang);
@@ -78,15 +79,20 @@ function resolveSharedHeroImage(
   return "";
 }
 
-export function AdminProjectSlugClient({ slug }: AdminProjectSlugClientProps) {
-  const normalizedSlug = slug.trim();
+export function AdminProjectSlugClient({
+  projectId: rawProjectId,
+}: AdminProjectSlugClientProps) {
+  const segment = useMemo(
+    () => resolveProjectKeySegment(rawProjectId) ?? "",
+    [rawProjectId]
+  );
   const router = useRouter();
   const queryClient = useQueryClient();
   const languagesQuery = useLanguagesQuery();
 
   const removeProject = useMutation({
     mutationFn: async () => {
-      await api.delete(`/admin/projects/${encodeURIComponent(normalizedSlug)}`);
+      await api.delete(`/admin/projects/${encodeURIComponent(segment)}`);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["content", "home"] });
@@ -98,8 +104,8 @@ export function AdminProjectSlugClient({ slug }: AdminProjectSlugClientProps) {
   const handleDeleteProjectFully = () => {
     if (
       !window.confirm(
-        `Полностью удалить «${normalizedSlug}» для всех языков в этой базе? ` +
-          `Сотрутся все ключи project.${normalizedSlug}.* и карточки в projects.list / home.projects.items по каждой локали. ` +
+        `Полностью удалить «${segment}» для всех языков в этой базе? ` +
+          `Сотрутся все ключи project.${segment}.* и карточки в projects.list / home.projects.items по каждой локали. ` +
           `Другие развёртывания с отдельной базой не затрагиваются. Действие необратимо.`
       )
     ) {
@@ -130,9 +136,9 @@ export function AdminProjectSlugClient({ slug }: AdminProjectSlugClientProps) {
 
   const projectQueries = useQueries({
     queries: langCodes.map((code) => ({
-      queryKey: queryKeys.contentProject(code, normalizedSlug),
-      queryFn: () => fetchProjectContent(code, normalizedSlug),
-      enabled: Boolean(normalizedSlug) && langCodes.length > 0,
+      queryKey: queryKeys.contentProject(code, segment),
+      queryFn: () => fetchProjectContent(code, segment),
+      enabled: Boolean(segment) && langCodes.length > 0,
     })),
   });
 
@@ -151,9 +157,9 @@ export function AdminProjectSlugClient({ slug }: AdminProjectSlugClientProps) {
       return {};
     }
     const base = entriesToMap(primaryQuery.data.entries);
-    const heroKey = projectHeroImageKey(normalizedSlug);
+    const heroKey = projectHeroImageKey(segment);
     const shared = resolveSharedHeroImage(
-      normalizedSlug,
+      segment,
       projectQueries,
       langCodes,
       editLang
@@ -164,7 +170,7 @@ export function AdminProjectSlugClient({ slug }: AdminProjectSlugClientProps) {
     return base;
   }, [
     primaryQuery?.data,
-    normalizedSlug,
+    segment,
     langCodes,
     projectQueries,
     queriesTick,
@@ -172,15 +178,32 @@ export function AdminProjectSlugClient({ slug }: AdminProjectSlugClientProps) {
   ]);
 
   const section = useMemo(
-    () => buildProjectSectionDef(normalizedSlug),
-    [normalizedSlug]
+    () => buildProjectSectionDef(segment),
+    [segment]
   );
+
+  if (!segment) {
+    return (
+      <div className={styles.adminOverview}>
+        <p className={styles.adminOverview__lead}>
+          Некорректный id проекта в адресе. Вернитесь к списку и откройте кейс снова.
+        </p>
+        <button
+          type="button"
+          className={styles.adminOverview__editBtn}
+          onClick={() => router.push("/admin/projects")}
+        >
+          К списку проектов
+        </button>
+      </div>
+    );
+  }
 
   if (primaryQuery?.isError) {
     return (
       <div className={styles.adminOverview}>
         <p className={styles.adminOverview__lead}>
-          Не удалось загрузить проект. Проверьте slug или обновите страницу.
+          Не удалось загрузить проект. Проверьте id или обновите страницу.
         </p>
         <button
           type="button"
@@ -190,10 +213,10 @@ export function AdminProjectSlugClient({ slug }: AdminProjectSlugClientProps) {
           К списку проектов
         </button>
         <div className={styles.adminProjectDanger}>
-          <h2 className={styles.adminProjectDanger__title}>Удалить этот slug</h2>
+          <h2 className={styles.adminProjectDanger__title}>Удалить этот кейс</h2>
           <p className={styles.adminProjectDanger__text}>
-            Если записи контента повреждены или slug лишний, можно полностью удалить кейс
-            для всех языков: ключи <code>project.{normalizedSlug}.*</code> и карточки на главной
+            Если записи контента повреждены или кейс лишний, можно полностью удалить его
+            для всех языков: ключи <code>project.{segment}.*</code> и карточки на главной
             по каждой локали в этой базе.
           </p>
           <button
@@ -215,8 +238,8 @@ export function AdminProjectSlugClient({ slug }: AdminProjectSlugClientProps) {
         <h1 className={styles.adminOverview__title}>Редактирование кейса</h1>
         <div className={styles.adminOverview__toolbar}>
           <p className={styles.adminOverview__lead}>
-            Slug: <code>{normalizedSlug}</code> — это страница{" "}
-            <strong>самого кейса</strong> (поля <code>{`project.${normalizedSlug}.*`}</code>
+            Id: <code>{segment}</code> — страница{" "}
+            <strong>самого кейса</strong> (поля <code>{`project.${segment}.*`}</code>
             ). Заголовок, локация, год, текст и оборудование — отдельно по языкам.{" "}
             <strong>Герой-картинка</strong> одна на все языки (сохраняется во все локали). Маленькая
             карточка на главной (другая картинка/подпись) — в разделе{" "}
@@ -249,7 +272,7 @@ export function AdminProjectSlugClient({ slug }: AdminProjectSlugClientProps) {
         ) : (
           <>
             <SectionEditorModal
-              key={`${normalizedSlug}:${editLang}`}
+              key={`${segment}:${editLang}`}
               open
               variant="embedded"
               section={section}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { normalizeNewProjectSlug } from "@/lib/projectHrefUtils";
+import { resolveProjectKeySegment } from "@/lib/projectHrefUtils";
 import { assertAdminSession } from "@/lib/server/adminSession";
 import {
   deleteProject,
@@ -7,7 +7,7 @@ import {
 } from "@/lib/server/contentStore";
 
 interface RouteParams {
-  params: { slug: string };
+  params: { projectId: string };
 }
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
@@ -17,16 +17,16 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
   }
 
-  const raw = decodeURIComponent(params.slug ?? "");
-  const slug = normalizeNewProjectSlug(raw);
-  if (!slug) {
+  const raw = decodeURIComponent(params.projectId ?? "");
+  const segment = resolveProjectKeySegment(raw);
+  if (!segment) {
     return NextResponse.json(
-      { error: "Некорректный slug." },
+      { error: "Некорректный id проекта." },
       { status: 400 }
     );
   }
 
   await ensureContentStoreHydrated();
-  await deleteProject(slug);
-  return NextResponse.json({ ok: true, slug });
+  await deleteProject(segment);
+  return NextResponse.json({ ok: true, id: segment });
 }

@@ -5,18 +5,22 @@ import type { HomeContentResponse } from "@/types";
 
 export async function fetchProjectContent(
   lang: string,
-  slug: string
+  /** UUID or legacy slug; same as CMS `project.{segment}.*`. */
+  projectKeySegment: string
 ): Promise<HomeContentResponse> {
   const { data } = await api.get<HomeContentResponse>("/content", {
-    params: { lang, page: "project", slug },
+    params: { lang, page: "project", slug: projectKeySegment },
   });
   return data;
 }
 
-export function useProjectContentQuery(lang: string, slug: string) {
+export function useProjectContentQuery(
+  lang: string,
+  projectKeySegment: string
+) {
   return useQuery({
-    queryKey: queryKeys.contentProject(lang, slug),
-    queryFn: () => fetchProjectContent(lang, slug),
-    enabled: Boolean(lang && slug),
+    queryKey: queryKeys.contentProject(lang, projectKeySegment),
+    queryFn: () => fetchProjectContent(lang, projectKeySegment),
+    enabled: Boolean(lang && projectKeySegment),
   });
 }

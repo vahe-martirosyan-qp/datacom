@@ -2,8 +2,11 @@ import type { ContentEntry, ContentValueType, Language } from "@/types";
 import { prisma } from "@/lib/server/prisma";
 import type { ProjectCardItem } from "@/types/site";
 import {
-  normalizeNewProjectSlug,
-  projectSlugFromCardHref,
+  canonicalizeProjectCardHref,
+  normalizeProjectId,
+  projectKeyAliasesForLookup,
+  projectKeySegmentFromCardHref,
+  resolveProjectKeySegment,
 } from "@/lib/projectHrefUtils";
 import {
   DEFAULT_NAV_MEGA_MENU_EN,
@@ -320,21 +323,21 @@ const enHome: Record<string, ContentEntry> = {
         title: "Maidens Hotel Moscow",
         location: "Moscow",
         imageUrl: "/images/project-maiden-moscow.png",
-        href: "projects/maidens-hotel-moscow",
+        href: "projects/00000001-0001-4001-8001-000000000001",
       },
       {
         title: "Riverside Conference & Spa",
         location: "Sochi",
         imageUrl:
           "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800&q=80",
-        href: "projects/riverside-sochi",
+        href: "projects/00000002-0002-4002-8002-000000000002",
       },
       {
         title: "Urban Loft Apartments",
         location: "Saint Petersburg",
         imageUrl:
           "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80",
-        href: "projects/urban-loft-spb",
+        href: "projects/00000003-0003-4003-8003-000000000003",
       },
     ]),
     type: "json",
@@ -349,95 +352,95 @@ const enHome: Record<string, ContentEntry> = {
     value: "projects",
     type: "text",
   },
-  "project.maidens-hotel-moscow.title": {
-    key: "project.maidens-hotel-moscow.title",
+  "project.00000001-0001-4001-8001-000000000001.title": {
+    key: "project.00000001-0001-4001-8001-000000000001.title",
     value: "Maidens Hotel Moscow",
     type: "text",
   },
-  "project.maidens-hotel-moscow.location": {
-    key: "project.maidens-hotel-moscow.location",
+  "project.00000001-0001-4001-8001-000000000001.location": {
+    key: "project.00000001-0001-4001-8001-000000000001.location",
     value: "Moscow",
     type: "text",
   },
-  "project.maidens-hotel-moscow.heroImage": {
-    key: "project.maidens-hotel-moscow.heroImage",
+  "project.00000001-0001-4001-8001-000000000001.heroImage": {
+    key: "project.00000001-0001-4001-8001-000000000001.heroImage",
     value: "/images/project-maiden-moscow.png",
     type: "image",
   },
-  "project.maidens-hotel-moscow.bodyHtml": {
-    key: "project.maidens-hotel-moscow.bodyHtml",
+  "project.00000001-0001-4001-8001-000000000001.bodyHtml": {
+    key: "project.00000001-0001-4001-8001-000000000001.bodyHtml",
     value: MAIDENS_BODY_HTML_EN,
     type: "text",
   },
-  "project.maidens-hotel-moscow.equipment": {
-    key: "project.maidens-hotel-moscow.equipment",
+  "project.00000001-0001-4001-8001-000000000001.equipment": {
+    key: "project.00000001-0001-4001-8001-000000000001.equipment",
     value: MAIDENS_EQUIPMENT,
     type: "json",
   },
-  "project.maidens-hotel-moscow.year": {
-    key: "project.maidens-hotel-moscow.year",
+  "project.00000001-0001-4001-8001-000000000001.year": {
+    key: "project.00000001-0001-4001-8001-000000000001.year",
     value: "2025",
     type: "text",
   },
-  "project.riverside-sochi.title": {
-    key: "project.riverside-sochi.title",
+  "project.00000002-0002-4002-8002-000000000002.title": {
+    key: "project.00000002-0002-4002-8002-000000000002.title",
     value: "Riverside Conference & Spa",
     type: "text",
   },
-  "project.riverside-sochi.location": {
-    key: "project.riverside-sochi.location",
+  "project.00000002-0002-4002-8002-000000000002.location": {
+    key: "project.00000002-0002-4002-8002-000000000002.location",
     value: "Sochi",
     type: "text",
   },
-  "project.riverside-sochi.heroImage": {
-    key: "project.riverside-sochi.heroImage",
+  "project.00000002-0002-4002-8002-000000000002.heroImage": {
+    key: "project.00000002-0002-4002-8002-000000000002.heroImage",
     value:
       "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=1600&q=80",
     type: "image",
   },
-  "project.riverside-sochi.bodyHtml": {
-    key: "project.riverside-sochi.bodyHtml",
+  "project.00000002-0002-4002-8002-000000000002.bodyHtml": {
+    key: "project.00000002-0002-4002-8002-000000000002.bodyHtml",
     value: RIVERSIDE_BODY_HTML_EN,
     type: "text",
   },
-  "project.riverside-sochi.equipment": {
-    key: "project.riverside-sochi.equipment",
+  "project.00000002-0002-4002-8002-000000000002.equipment": {
+    key: "project.00000002-0002-4002-8002-000000000002.equipment",
     value: RIVERSIDE_EQUIPMENT,
     type: "json",
   },
-  "project.riverside-sochi.year": {
-    key: "project.riverside-sochi.year",
+  "project.00000002-0002-4002-8002-000000000002.year": {
+    key: "project.00000002-0002-4002-8002-000000000002.year",
     value: "2024",
     type: "text",
   },
-  "project.urban-loft-spb.title": {
-    key: "project.urban-loft-spb.title",
+  "project.00000003-0003-4003-8003-000000000003.title": {
+    key: "project.00000003-0003-4003-8003-000000000003.title",
     value: "Urban Loft Apartments",
     type: "text",
   },
-  "project.urban-loft-spb.location": {
-    key: "project.urban-loft-spb.location",
+  "project.00000003-0003-4003-8003-000000000003.location": {
+    key: "project.00000003-0003-4003-8003-000000000003.location",
     value: "Saint Petersburg",
     type: "text",
   },
-  "project.urban-loft-spb.heroImage": {
-    key: "project.urban-loft-spb.heroImage",
+  "project.00000003-0003-4003-8003-000000000003.heroImage": {
+    key: "project.00000003-0003-4003-8003-000000000003.heroImage",
     value:
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1600&q=80",
     type: "image",
   },
-  "project.urban-loft-spb.bodyHtml": {
-    key: "project.urban-loft-spb.bodyHtml",
+  "project.00000003-0003-4003-8003-000000000003.bodyHtml": {
+    key: "project.00000003-0003-4003-8003-000000000003.bodyHtml",
     value: URBAN_BODY_HTML_EN,
     type: "text",
   },
-  "project.urban-loft-spb.equipment": {
-    key: "project.urban-loft-spb.equipment",
+  "project.00000003-0003-4003-8003-000000000003.equipment": {
+    key: "project.00000003-0003-4003-8003-000000000003.equipment",
     value: URBAN_EQUIPMENT,
     type: "json",
   },
-  "project.urban-loft-spb.year": {
-    key: "project.urban-loft-spb.year",
+  "project.00000003-0003-4003-8003-000000000003.year": {
+    key: "project.00000003-0003-4003-8003-000000000003.year",
     value: "2023",
     type: "text",
   },
@@ -886,21 +889,21 @@ const ruHome: Record<string, ContentEntry> = {
         title: "Maidens Hotel Moscow",
         location: "Москва",
         imageUrl: "/images/project-maiden-moscow.png",
-        href: "projects/maidens-hotel-moscow",
+        href: "projects/00000001-0001-4001-8001-000000000001",
       },
       {
         title: "Riverside Conference & Spa",
         location: "Сочи",
         imageUrl:
           "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800&q=80",
-        href: "projects/riverside-sochi",
+        href: "projects/00000002-0002-4002-8002-000000000002",
       },
       {
         title: "Urban Loft Apartments",
         location: "Санкт-Петербург",
         imageUrl:
           "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80",
-        href: "projects/urban-loft-spb",
+        href: "projects/00000003-0003-4003-8003-000000000003",
       },
     ]),
     type: "json",
@@ -915,95 +918,95 @@ const ruHome: Record<string, ContentEntry> = {
     value: "projects",
     type: "text",
   },
-  "project.maidens-hotel-moscow.title": {
-    key: "project.maidens-hotel-moscow.title",
+  "project.00000001-0001-4001-8001-000000000001.title": {
+    key: "project.00000001-0001-4001-8001-000000000001.title",
     value: "Maidens Hotel Moscow",
     type: "text",
   },
-  "project.maidens-hotel-moscow.location": {
-    key: "project.maidens-hotel-moscow.location",
+  "project.00000001-0001-4001-8001-000000000001.location": {
+    key: "project.00000001-0001-4001-8001-000000000001.location",
     value: "Москва",
     type: "text",
   },
-  "project.maidens-hotel-moscow.heroImage": {
-    key: "project.maidens-hotel-moscow.heroImage",
+  "project.00000001-0001-4001-8001-000000000001.heroImage": {
+    key: "project.00000001-0001-4001-8001-000000000001.heroImage",
     value: "/images/project-maiden-moscow.png",
     type: "image",
   },
-  "project.maidens-hotel-moscow.bodyHtml": {
-    key: "project.maidens-hotel-moscow.bodyHtml",
+  "project.00000001-0001-4001-8001-000000000001.bodyHtml": {
+    key: "project.00000001-0001-4001-8001-000000000001.bodyHtml",
     value: MAIDENS_BODY_HTML_RU,
     type: "text",
   },
-  "project.maidens-hotel-moscow.equipment": {
-    key: "project.maidens-hotel-moscow.equipment",
+  "project.00000001-0001-4001-8001-000000000001.equipment": {
+    key: "project.00000001-0001-4001-8001-000000000001.equipment",
     value: MAIDENS_EQUIPMENT,
     type: "json",
   },
-  "project.maidens-hotel-moscow.year": {
-    key: "project.maidens-hotel-moscow.year",
+  "project.00000001-0001-4001-8001-000000000001.year": {
+    key: "project.00000001-0001-4001-8001-000000000001.year",
     value: "2025",
     type: "text",
   },
-  "project.riverside-sochi.title": {
-    key: "project.riverside-sochi.title",
+  "project.00000002-0002-4002-8002-000000000002.title": {
+    key: "project.00000002-0002-4002-8002-000000000002.title",
     value: "Riverside Conference & Spa",
     type: "text",
   },
-  "project.riverside-sochi.location": {
-    key: "project.riverside-sochi.location",
+  "project.00000002-0002-4002-8002-000000000002.location": {
+    key: "project.00000002-0002-4002-8002-000000000002.location",
     value: "Сочи",
     type: "text",
   },
-  "project.riverside-sochi.heroImage": {
-    key: "project.riverside-sochi.heroImage",
+  "project.00000002-0002-4002-8002-000000000002.heroImage": {
+    key: "project.00000002-0002-4002-8002-000000000002.heroImage",
     value:
       "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=1600&q=80",
     type: "image",
   },
-  "project.riverside-sochi.bodyHtml": {
-    key: "project.riverside-sochi.bodyHtml",
+  "project.00000002-0002-4002-8002-000000000002.bodyHtml": {
+    key: "project.00000002-0002-4002-8002-000000000002.bodyHtml",
     value: RIVERSIDE_BODY_HTML_RU,
     type: "text",
   },
-  "project.riverside-sochi.equipment": {
-    key: "project.riverside-sochi.equipment",
+  "project.00000002-0002-4002-8002-000000000002.equipment": {
+    key: "project.00000002-0002-4002-8002-000000000002.equipment",
     value: RIVERSIDE_EQUIPMENT,
     type: "json",
   },
-  "project.riverside-sochi.year": {
-    key: "project.riverside-sochi.year",
+  "project.00000002-0002-4002-8002-000000000002.year": {
+    key: "project.00000002-0002-4002-8002-000000000002.year",
     value: "2024",
     type: "text",
   },
-  "project.urban-loft-spb.title": {
-    key: "project.urban-loft-spb.title",
+  "project.00000003-0003-4003-8003-000000000003.title": {
+    key: "project.00000003-0003-4003-8003-000000000003.title",
     value: "Urban Loft Apartments",
     type: "text",
   },
-  "project.urban-loft-spb.location": {
-    key: "project.urban-loft-spb.location",
+  "project.00000003-0003-4003-8003-000000000003.location": {
+    key: "project.00000003-0003-4003-8003-000000000003.location",
     value: "Санкт-Петербург",
     type: "text",
   },
-  "project.urban-loft-spb.heroImage": {
-    key: "project.urban-loft-spb.heroImage",
+  "project.00000003-0003-4003-8003-000000000003.heroImage": {
+    key: "project.00000003-0003-4003-8003-000000000003.heroImage",
     value:
       "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1600&q=80",
     type: "image",
   },
-  "project.urban-loft-spb.bodyHtml": {
-    key: "project.urban-loft-spb.bodyHtml",
+  "project.00000003-0003-4003-8003-000000000003.bodyHtml": {
+    key: "project.00000003-0003-4003-8003-000000000003.bodyHtml",
     value: URBAN_BODY_HTML_RU,
     type: "text",
   },
-  "project.urban-loft-spb.equipment": {
-    key: "project.urban-loft-spb.equipment",
+  "project.00000003-0003-4003-8003-000000000003.equipment": {
+    key: "project.00000003-0003-4003-8003-000000000003.equipment",
     value: URBAN_EQUIPMENT,
     type: "json",
   },
-  "project.urban-loft-spb.year": {
-    key: "project.urban-loft-spb.year",
+  "project.00000003-0003-4003-8003-000000000003.year": {
+    key: "project.00000003-0003-4003-8003-000000000003.year",
     value: "2023",
     type: "text",
   },
@@ -1511,16 +1514,18 @@ function resolveProjectFieldForLang(
   lang: string,
   field: "heroImage" | "title" | "location"
 ): string {
-  const key = `project.${slug}.${field}`;
   const bucket = byLang[lang] ?? byLang.en;
-  const direct = bucket[key]?.value?.trim();
-  if (direct) {
-    return direct;
-  }
-  if (lang !== "en" && byLang.en) {
-    const enVal = byLang.en[key]?.value?.trim();
-    if (enVal) {
-      return enVal;
+  for (const seg of projectKeyAliasesForLookup(slug)) {
+    const key = `project.${seg}.${field}`;
+    const direct = bucket[key]?.value?.trim();
+    if (direct) {
+      return direct;
+    }
+    if (lang !== "en" && byLang.en) {
+      const enVal = byLang.en[key]?.value?.trim();
+      if (enVal) {
+        return enVal;
+      }
     }
   }
   return "";
@@ -1540,27 +1545,33 @@ function mergeProjectFieldsIntoProjectCardsJson(raw: string, lang: string): stri
   }
   let changed = false;
   const next = items.map((item) => {
-    const slug = projectSlugFromCardHref(item.href);
-    if (!slug) {
+    const segment = projectKeySegmentFromCardHref(item.href);
+    if (!segment) {
       return item;
     }
     let out = item;
 
-    const hero = resolveProjectFieldForLang(slug, lang, "heroImage");
+    const hero = resolveProjectFieldForLang(segment, lang, "heroImage");
     if (hero && (out.imageUrl ?? "").trim() !== hero) {
       out = { ...out, imageUrl: hero };
       changed = true;
     }
 
-    const title = resolveProjectFieldForLang(slug, lang, "title");
+    const title = resolveProjectFieldForLang(segment, lang, "title");
     if (title && (out.title ?? "").trim() !== title) {
       out = { ...out, title };
       changed = true;
     }
 
-    const location = resolveProjectFieldForLang(slug, lang, "location");
+    const location = resolveProjectFieldForLang(segment, lang, "location");
     if (location && (out.location ?? "").trim() !== location) {
       out = { ...out, location };
+      changed = true;
+    }
+
+    const canonHref = canonicalizeProjectCardHref(item.href ?? "");
+    if (canonHref !== (item.href ?? "").trim()) {
+      out = { ...out, href: canonHref };
       changed = true;
     }
 
@@ -1588,26 +1599,57 @@ export function getPageContent(
     });
   }
   if (page === "project" && slug) {
-    const prefix = `project.${slug}.`;
-    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
-    if (entries.length === 0) {
+    const segment = resolveProjectKeySegment(slug);
+    if (!segment) {
       return null;
     }
-    const heroKey = `${prefix}heroImage`;
-    const byKey = new Map(entries.map((e) => [e.key, { ...e }]));
-    const hero = byKey.get(heroKey);
-    const heroEmpty = !hero?.value?.trim();
+    const canonicalSegment = normalizeProjectId(segment) ?? segment;
+    let dataSegment: string | null = null;
+    let entries: ContentEntry[] = [];
+    for (const cand of projectKeyAliasesForLookup(segment)) {
+      const p = `project.${cand}.`;
+      const found = Object.values(bucket).filter((e) => e.key.startsWith(p));
+      if (found.length > 0) {
+        dataSegment = cand;
+        entries = found;
+        break;
+      }
+    }
+    if (entries.length === 0 || dataSegment === null) {
+      return null;
+    }
+    let outEntries =
+      dataSegment !== canonicalSegment
+        ? entries.map((e) => ({
+            ...e,
+            key: e.key.replace(
+              `project.${dataSegment}.`,
+              `project.${canonicalSegment}.`
+            ),
+          }))
+        : entries;
+    const heroKey = `project.${canonicalSegment}.heroImage`;
+    const byKey = new Map(outEntries.map((e) => [e.key, { ...e }]));
+    const heroEntry = byKey.get(heroKey);
+    const heroEmpty = !heroEntry?.value?.trim();
     if (heroEmpty && lang !== "en" && byLang.en) {
-      const enHero = byLang.en[heroKey];
-      const enVal = enHero?.value?.trim();
-      if (enVal) {
-        if (hero) {
-          byKey.set(heroKey, { ...hero, value: enHero!.value });
-        } else if (enHero) {
+      let enSource: ContentEntry | undefined;
+      for (const seg of projectKeyAliasesForLookup(canonicalSegment)) {
+        const k = `project.${seg}.heroImage`;
+        const cand = byLang.en[k];
+        if (cand?.value?.trim()) {
+          enSource = cand;
+          break;
+        }
+      }
+      if (enSource?.value?.trim()) {
+        if (heroEntry) {
+          byKey.set(heroKey, { ...heroEntry, value: enSource.value });
+        } else {
           byKey.set(heroKey, {
             key: heroKey,
-            value: enHero.value,
-            type: enHero.type,
+            value: enSource.value,
+            type: enSource.type,
           });
         }
       }
@@ -1664,14 +1706,14 @@ const PROJECT_STUB_FIELDS = [
 ] as const;
 
 /**
- * Creates empty `project.{slug}.*` entries for every language bucket (admin: new case study).
- * `slug` must already be normalized (e.g. `normalizeNewProjectSlug`).
+ * Creates empty `project.{id}.*` entries for every language bucket (admin: new case study).
+ * `projectId` is a UUID (new projects) or a legacy slug segment.
  */
-export async function ensureProjectStub(slug: string): Promise<void> {
+export async function ensureProjectStub(projectId: string): Promise<void> {
   const toPersist: { lang: string; key: string }[] = [];
   for (const lang of Object.keys(byLang)) {
     for (const field of PROJECT_STUB_FIELDS) {
-      const key = `project.${slug}.${field}`;
+      const key = `project.${projectId}.${field}`;
       if (!byLang[lang]?.[key]) {
         const initial = field === "equipment" ? "[]" : "";
         const type: ContentValueType = field === "equipment" ? "json" : "text";
@@ -1695,10 +1737,12 @@ export async function ensureProjectStub(slug: string): Promise<void> {
   }
 }
 
-/** Appends a teaser card to `projects.list` for each language if that slug is not already linked. */
-export async function appendProjectHomeCard(slug: string): Promise<void> {
-  const href = `projects/${slug}`;
+/** Appends a teaser card to `projects.list` for each language if that project id is not already linked. */
+export async function appendProjectHomeCard(projectId: string): Promise<void> {
+  const href = `projects/${projectId}`;
   const langsUpdated: string[] = [];
+  const cardTitle =
+    projectId.length > 13 ? `${projectId.slice(0, 8)}…` : projectId;
   for (const lang of Object.keys(byLang)) {
     const bucket = byLang[lang];
     if (!bucket) {
@@ -1713,13 +1757,13 @@ export async function appendProjectHomeCard(slug: string): Promise<void> {
       items = [];
     }
     const exists = items.some(
-      (it) => projectSlugFromCardHref(it.href) === slug
+      (it) => projectKeySegmentFromCardHref(it.href) === projectId
     );
     if (exists) {
       continue;
     }
     items.push({
-      title: slug,
+      title: cardTitle,
       location: "",
       imageUrl: "",
       href,
@@ -1749,7 +1793,7 @@ export async function appendProjectHomeCard(slug: string): Promise<void> {
 
 function filterProjectCardsJson(
   raw: string | undefined,
-  slug: string
+  targetSegment: string
 ): { next: string; changed: boolean } {
   let items: ProjectCardItem[] = [];
   try {
@@ -1759,22 +1803,22 @@ function filterProjectCardsJson(
     items = [];
   }
   const filtered = items.filter(
-    (it) => projectSlugFromCardHref(it.href) !== slug
+    (it) => projectKeySegmentFromCardHref(it.href) !== targetSegment
   );
   const changed = filtered.length !== items.length;
   return { next: JSON.stringify(filtered), changed };
 }
 
 /**
- * Removes all `project.{slug}.*` keys and teaser cards pointing at this slug
+ * Removes all `project.{id}.*` keys and teaser cards pointing at this project
  * (`projects.list`, legacy `home.projects.items`) for every language bucket.
  */
-export async function deleteProject(rawSlug: string): Promise<boolean> {
-  const slug = normalizeNewProjectSlug(rawSlug);
-  if (!slug) {
+export async function deleteProject(rawSegment: string): Promise<boolean> {
+  const segment = resolveProjectKeySegment(rawSegment);
+  if (!segment) {
     return false;
   }
-  const prefix = `project.${slug}.`;
+  const prefix = `project.${segment}.`;
 
   for (const lang of Object.keys(byLang)) {
     const bucket = byLang[lang];
@@ -1790,7 +1834,7 @@ export async function deleteProject(rawSlug: string): Promise<boolean> {
 
     const listEntry = bucket["projects.list"];
     if (listEntry) {
-      const { next, changed } = filterProjectCardsJson(listEntry.value, slug);
+      const { next, changed } = filterProjectCardsJson(listEntry.value, segment);
       if (changed) {
         assignContentEntry(
           lang,
@@ -1803,7 +1847,7 @@ export async function deleteProject(rawSlug: string): Promise<boolean> {
 
     const legacy = bucket["home.projects.items"];
     if (legacy) {
-      const { next, changed } = filterProjectCardsJson(legacy.value, slug);
+      const { next, changed } = filterProjectCardsJson(legacy.value, segment);
       if (changed) {
         assignContentEntry(
           lang,
@@ -1826,7 +1870,7 @@ export async function deleteProject(rawSlug: string): Promise<boolean> {
         where: { key: { in: [...listKeys] } },
       });
       for (const row of listRows) {
-        const { next, changed } = filterProjectCardsJson(row.value, slug);
+        const { next, changed } = filterProjectCardsJson(row.value, segment);
         if (changed) {
           await tx.contentEntry.update({
             where: {
