@@ -77,10 +77,6 @@
     @include mixins.bp-md {
       grid-template-columns: repeat(2, 1fr);
     }
-
-    @include mixins.bp-lg {
-      grid-template-columns: repeat(3, 1fr);
-    }
   }
 
   &__item {
@@ -95,18 +91,8 @@
     text-decoration: none;
     color: var(--color-text);
     background: var(--color-surface-alt);
-    border: 1px solid var(--color-border-dark);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    transition: border-color var(--t-normal) var(--ease-out),
-      box-shadow var(--t-normal) var(--ease-out),
-      transform var(--t-normal) var(--ease-out);
-
-    &:hover {
-      border-color: var(--color-accent-35);
-      box-shadow: var(--shadow-soft);
-      transform: translateY(-4px);
-    }
   }
 
   &__cardMedia {
@@ -122,6 +108,12 @@
     transition: transform var(--t-slow) var(--ease-out);
   }
 
+  @media (hover: hover) {
+    &__card:hover &__cardImg {
+      transform: scale(1.03);
+    }
+  }
+
   &__cardPlaceholder {
     position: absolute;
     inset: 0;
@@ -130,12 +122,6 @@
       var(--color-border-dark) 0%,
       var(--color-surface) 100%
     );
-  }
-
-  @media (hover: hover) {
-    &__card:hover &__cardImg {
-      transform: scale(1.03);
-    }
   }
 
   &__cardBody {
