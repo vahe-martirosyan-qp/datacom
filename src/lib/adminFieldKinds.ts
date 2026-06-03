@@ -8,6 +8,7 @@ export type AdminFieldKind =
   | "featureCards"
   | "projectCards"
   | "spotlightCards"
+  | "integrationServices"
   | "blogPosts"
   | "stepItems"
   | "brandList"
@@ -17,6 +18,7 @@ export type AdminFieldKind =
   | "companyStats"
   | "contactOffices"
   | "equipmentHighlights"
+  | "equipmentFeatureSections"
   | "equipmentProducts"
   | "equipmentSpecs"
   | "equipmentProductImages";
@@ -60,6 +62,9 @@ const KIND_BY_KEY: Record<string, AdminFieldKind> = {
   "page.blog.subtitle": "textarea",
   "page.equipment.seo.description": "textarea",
   "page.equipment.subtitle": "textarea",
+  "page.integrations.items": "integrationServices",
+  "page.integrations.seo.description": "textarea",
+  "page.integrations.subtitle": "textarea",
 };
 
 export function getAdminFieldKind(key: string): AdminFieldKind {
@@ -75,6 +80,9 @@ export function getAdminFieldKind(key: string): AdminFieldKind {
   }
   if (key.endsWith(".highlights")) {
     return "equipmentHighlights";
+  }
+  if (key.endsWith(".featureSections")) {
+    return "equipmentFeatureSections";
   }
   if (key.endsWith(".products")) {
     return "equipmentProducts";

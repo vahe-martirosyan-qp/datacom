@@ -9,7 +9,7 @@ import {
 
 export async function DELETE(
   _request: Request,
-  context: { params: { categorySlug: string; productSlug: string } }
+  context: { params: Promise<{ categorySlug: string; productSlug: string }> }
 ) {
   try {
     await assertAdminSession();
@@ -17,12 +17,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
   }
 
-  const categorySlug = resolveEquipmentCategorySlug(
-    context.params.categorySlug ?? ""
-  );
-  const productSlug = resolveEquipmentProductSlug(
-    context.params.productSlug ?? ""
-  );
+  const { categorySlug: categoryRaw, productSlug: productRaw } =
+    await context.params;
+  const categorySlug = resolveEquipmentCategorySlug(categoryRaw ?? "");
+  const productSlug = resolveEquipmentProductSlug(productRaw ?? "");
 
   if (!categorySlug || !productSlug) {
     return NextResponse.json({ error: "Некорректный адрес товара." }, { status: 400 });

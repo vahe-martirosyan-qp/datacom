@@ -31,6 +31,11 @@ const LINKS: { href: string; title: string; desc: string }[] = [
       "Пункты меню «Equipment & systems»: категории, карточки на странице категории и отдельные страницы товаров с галереей.",
   },
   {
+    href: "/admin/integrations",
+    title: "Интеграции",
+    desc: "Страница `/[lang]/integrations` — услуги интегратора (карточки со ссылками).",
+  },
+  {
     href: "/admin/privacy",
     title: "Политика конфиденциальности",
     desc: "Страница `/[lang]/privacy-policy` — текст политики в TipTap.",

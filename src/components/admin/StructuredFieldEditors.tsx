@@ -13,6 +13,8 @@ import type {
   CompanyStatItem,
   EquipmentProductImage,
   ContactOfficeItem,
+  EquipmentFeatureGroup,
+  EquipmentFeatureSection,
   EquipmentProductItem,
   EquipmentSpecItem,
   FeatureCard,
@@ -33,6 +35,11 @@ import {
   equipmentCategoryHrefFromSlug,
   equipmentCategorySlugFromNavHref,
 } from "@/lib/equipmentHrefUtils";
+import {
+  integrationCategoryHrefFromSlug,
+  integrationCategorySlugFromNavHref,
+} from "@/lib/integrationsHrefUtils";
+import { findIntegrationsMegaItemIndex } from "@/lib/integrationsNavUtils";
 import { resolveEquipmentProductSlug } from "@/lib/equipmentProductHrefUtils";
 import { AdminImageUrlField } from "./AdminImageUrlField";
 import styles from "./StructuredFieldEditors.module.scss";
@@ -430,6 +437,126 @@ export function SpotlightCardsEditor({
         className={styles.structuredField__add}
         onClick={() =>
           sync([...items, { title: "", desc: "", href: "" }])
+        }
+      >
+        + Добавить карточку
+      </button>
+    </div>
+  );
+}
+
+interface IntegrationServicesEditorProps {
+  value: string;
+  onChange: (json: string) => void;
+}
+
+export function IntegrationServicesEditor({
+  value,
+  onChange,
+}: IntegrationServicesEditorProps) {
+  const [items, setItems] = useState<SpotlightCard[]>(() =>
+    safeParseSpotlight(value)
+  );
+
+  useEffect(() => {
+    setItems(safeParseSpotlight(value));
+  }, [value]);
+
+  const sync = (next: SpotlightCard[]) => {
+    setItems(next);
+    onChange(JSON.stringify(next));
+  };
+
+  return (
+    <div className={styles.structuredField}>
+      <h3 className={styles.structuredField__heading}>Карточки услуг</h3>
+      <p className={styles.structuredField__hint}>
+        Как на smarteq.ru/integration: иллюстрация сверху, заголовок и описание.
+        Ссылка — путь без языка, например <code>integrations/design</code>.
+      </p>
+      {items.map((item, index) => (
+        <div key={index} className={styles.structuredField__row}>
+          <div className={styles.structuredField__field}>
+            <span className={styles.structuredField__label}>Заголовок</span>
+            <input
+              className={styles.structuredField__input}
+              value={item.title}
+              onChange={(e) => {
+                const next = [...items];
+                const row = next[index];
+                if (row) {
+                  next[index] = { ...row, title: e.target.value };
+                  sync(next);
+                }
+              }}
+            />
+          </div>
+          <div className={styles.structuredField__field}>
+            <span className={styles.structuredField__label}>Описание</span>
+            <textarea
+              className={`${styles.structuredField__input} ${styles.structuredField__textarea}`}
+              value={item.desc}
+              onChange={(e) => {
+                const next = [...items];
+                const row = next[index];
+                if (row) {
+                  next[index] = { ...row, desc: e.target.value };
+                  sync(next);
+                }
+              }}
+              rows={2}
+            />
+          </div>
+          <div className={styles.structuredField__field}>
+            <span className={styles.structuredField__label}>Ссылка</span>
+            <input
+              className={styles.structuredField__input}
+              value={item.href}
+              onChange={(e) => {
+                const next = [...items];
+                const row = next[index];
+                if (row) {
+                  next[index] = { ...row, href: e.target.value };
+                  sync(next);
+                }
+              }}
+            />
+          </div>
+          <div className={styles.structuredField__field}>
+            <span className={styles.structuredField__label}>
+              Иллюстрация (URL)
+            </span>
+            <input
+              className={styles.structuredField__input}
+              value={item.imageUrl ?? ""}
+              onChange={(e) => {
+                const next = [...items];
+                const row = next[index];
+                if (row) {
+                  next[index] = {
+                    ...row,
+                    imageUrl: e.target.value,
+                  };
+                  sync(next);
+                }
+              }}
+              placeholder="https://…/icon.svg"
+            />
+          </div>
+          <button
+            type="button"
+            className={styles.structuredField__remove}
+            onClick={() => sync(items.filter((_, i) => i !== index))}
+          >
+            Удалить
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className={styles.structuredField__add}
+        onClick={() =>
+          sync([...items, { title: "", desc: "", href: "", imageUrl: "" }])
         }
       >
         + Добавить карточку
@@ -1606,6 +1733,109 @@ export function EquipmentSingleCategoryEditor({
   );
 }
 
+interface IntegrationSingleCategoryEditorProps {
+  categorySlug: string;
+  value: string;
+  onChange: (json: string) => void;
+}
+
+/** Edits one integrations service row in `home.nav.megaMenu`. */
+export function IntegrationSingleCategoryEditor({
+  categorySlug,
+  value,
+  onChange,
+}: IntegrationSingleCategoryEditorProps) {
+  const [items, setItems] = useState<NavMegaItem[]>(() =>
+    parseMegaMenuItems(value)
+  );
+
+  useEffect(() => {
+    setItems(parseMegaMenuItems(value));
+  }, [value]);
+
+  const integrationsIndex = findIntegrationsMegaItemIndex(items);
+  const integrationsItem =
+    integrationsIndex >= 0 ? items[integrationsIndex] : undefined;
+  const children = integrationsItem?.children ?? [];
+  const childIndex = children.findIndex(
+    (c) => integrationCategorySlugFromNavHref(c.href) === categorySlug
+  );
+  const child = childIndex >= 0 ? children[childIndex] : undefined;
+
+  const syncChild = (nextChild: NavItem) => {
+    if (integrationsIndex < 0 || childIndex < 0) {
+      return;
+    }
+    const next = [...items];
+    const row = next[integrationsIndex];
+    if (!row) {
+      return;
+    }
+    const nextChildren = [...(row.children ?? [])];
+    nextChildren[childIndex] = nextChild;
+    next[integrationsIndex] = { ...row, children: nextChildren };
+    setItems(next);
+    onChange(serializeMegaMenuItems(next));
+  };
+
+  if (integrationsIndex < 0 || !child) {
+    return (
+      <p className={styles.structuredField__hint}>
+        Пункт «{categorySlug}» не найден в меню. Вернитесь к списку или создайте
+        услугу заново.
+      </p>
+    );
+  }
+
+  return (
+    <div className={styles.structuredField}>
+      <h3 className={styles.structuredField__heading}>
+        Карточка и пункт меню
+      </h3>
+      <p className={styles.structuredField__hint}>
+        Название и ссылка — в шапке и на /integrations; иллюстрация — на карточке
+        списка. Полный текст услуги — в блоках выше.
+      </p>
+      <div className={styles.structuredField__field}>
+        <span className={styles.structuredField__label}>Название в меню</span>
+        <input
+          className={styles.structuredField__input}
+          value={child.label}
+          onChange={(e) => syncChild({ ...child, label: e.target.value })}
+        />
+      </div>
+      <div className={styles.structuredField__field}>
+        <span className={styles.structuredField__label}>Адрес в меню и на сайте</span>
+        <input
+          className={styles.structuredField__input}
+          value={child.href}
+          onChange={(e) => syncChild({ ...child, href: e.target.value })}
+          placeholder={integrationCategoryHrefFromSlug(categorySlug)}
+        />
+      </div>
+      <div className={styles.structuredField__field}>
+        <span className={styles.structuredField__label}>
+          Краткое описание на /integrations
+        </span>
+        <textarea
+          className={styles.structuredField__input}
+          rows={3}
+          value={child.desc ?? ""}
+          onChange={(e) => syncChild({ ...child, desc: e.target.value })}
+        />
+      </div>
+      <AdminImageUrlField
+        compact
+        label="Иллюстрация на /integrations"
+        value={child.imageUrl ?? ""}
+        onChange={(nextUrl) =>
+          syncChild({ ...child, imageUrl: nextUrl || undefined })
+        }
+      />
+    </div>
+  );
+}
+
 function safeParseStringList(raw: string): string[] {
   return parseJsonArray<string>(raw, []);
 }
@@ -1929,6 +2159,247 @@ export function EquipmentSpecsEditor({
         onClick={() => sync([...items, { title: "", desc: "" }])}
       >
         + Добавить характеристику
+      </button>
+    </div>
+  );
+}
+
+function safeParseEquipmentFeatureSections(
+  raw: string
+): EquipmentFeatureSection[] {
+  return parseJsonArray<EquipmentFeatureSection>(raw, []);
+}
+
+function emptyFeatureGroup(): EquipmentFeatureGroup {
+  return { subtitle: "", chips: [], lines: [] };
+}
+
+function emptyFeatureSection(): EquipmentFeatureSection {
+  return { title: "", groups: [emptyFeatureGroup()] };
+}
+
+interface StringListEditorProps {
+  label: string;
+  hint: string;
+  items: string[];
+  onChange: (next: string[]) => void;
+}
+
+function StringListEditor({
+  label,
+  hint,
+  items,
+  onChange,
+}: StringListEditorProps) {
+  return (
+    <div className={styles.structuredField__field}>
+      <span className={styles.structuredField__label}>{label}</span>
+      <span className={styles.structuredField__fieldHint}>{hint}</span>
+      {items.map((line, index) => (
+        <div key={index} className={styles.structuredField__row}>
+          <input
+            className={styles.structuredField__input}
+            value={line}
+            onChange={(e) => {
+              const next = [...items];
+              next[index] = e.target.value;
+              onChange(next);
+            }}
+          />
+          <button
+            type="button"
+            className={styles.structuredField__remove}
+            onClick={() => onChange(items.filter((_, i) => i !== index))}
+          >
+            Удалить
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className={styles.structuredField__add}
+        onClick={() => onChange([...items, ""])}
+      >
+        + Добавить строку
+      </button>
+    </div>
+  );
+}
+
+interface EquipmentFeatureSectionsEditorProps {
+  value: string;
+  onChange: (json: string) => void;
+}
+
+export function EquipmentFeatureSectionsEditor({
+  value,
+  onChange,
+}: EquipmentFeatureSectionsEditorProps) {
+  const [sections, setSections] = useState<EquipmentFeatureSection[]>(() =>
+    safeParseEquipmentFeatureSections(value)
+  );
+
+  useEffect(() => {
+    setSections(safeParseEquipmentFeatureSections(value));
+  }, [value]);
+
+  const sync = (next: EquipmentFeatureSection[]) => {
+    setSections(next);
+    onChange(JSON.stringify(next));
+  };
+
+  const updateSection = (
+    sectionIndex: number,
+    patch: Partial<EquipmentFeatureSection>
+  ) => {
+    const next = [...sections];
+    const row = next[sectionIndex];
+    if (row) {
+      next[sectionIndex] = { ...row, ...patch };
+      sync(next);
+    }
+  };
+
+  const updateGroup = (
+    sectionIndex: number,
+    groupIndex: number,
+    patch: Partial<EquipmentFeatureGroup>
+  ) => {
+    const next = [...sections];
+    const section = next[sectionIndex];
+    if (!section) {
+      return;
+    }
+    const groups = [...(section.groups ?? [])];
+    const group = groups[groupIndex];
+    if (group) {
+      groups[groupIndex] = { ...group, ...patch };
+      next[sectionIndex] = { ...section, groups };
+      sync(next);
+    }
+  };
+
+  return (
+    <div className={styles.structuredField}>
+      <h3 className={styles.structuredField__heading}>
+        Секции с подзаголовками и чипами
+      </h3>
+      <p className={styles.structuredField__hint}>
+        Заголовок H2, слева — подзаголовки и пункты (с «+» и без), справа —
+        изображение секции. Как блок «Широкая линейка…» на smarteq.ru.
+      </p>
+      {sections.map((section, sectionIndex) => (
+        <div key={sectionIndex} className={styles.structuredField__columnCard}>
+          <div className={styles.structuredField__field}>
+            <span className={styles.structuredField__label}>
+              Заголовок секции (H2)
+            </span>
+            <input
+              className={styles.structuredField__input}
+              value={section.title}
+              onChange={(e) =>
+                updateSection(sectionIndex, { title: e.target.value })
+              }
+            />
+          </div>
+          <AdminImageUrlField
+            compact
+            label="Изображение справа от пунктов"
+            value={section.imageUrl ?? ""}
+            onChange={(nextUrl) =>
+              updateSection(sectionIndex, {
+                imageUrl: nextUrl || undefined,
+              })
+            }
+          />
+          {(section.groups ?? []).map((group, groupIndex) => (
+            <div
+              key={groupIndex}
+              className={styles.structuredField__columnCard}
+            >
+              <div className={styles.structuredField__field}>
+                <span className={styles.structuredField__label}>
+                  Подзаголовок группы
+                </span>
+                <input
+                  className={styles.structuredField__input}
+                  value={group.subtitle}
+                  onChange={(e) =>
+                    updateGroup(sectionIndex, groupIndex, {
+                      subtitle: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <StringListEditor
+                label="Пункты с «+»"
+                hint="Отображаются как чипы с плюсом."
+                items={group.chips ?? []}
+                onChange={(chips) =>
+                  updateGroup(sectionIndex, groupIndex, { chips })
+                }
+              />
+              <StringListEditor
+                label="Обычные строки"
+                hint="Без плюса — под чипами, отдельным списком."
+                items={group.lines ?? []}
+                onChange={(lines) =>
+                  updateGroup(sectionIndex, groupIndex, { lines })
+                }
+              />
+              <button
+                type="button"
+                className={styles.structuredField__remove}
+                onClick={() => {
+                  const next = [...sections];
+                  const sec = next[sectionIndex];
+                  if (sec) {
+                    next[sectionIndex] = {
+                      ...sec,
+                      groups: (sec.groups ?? []).filter(
+                        (_, i) => i !== groupIndex
+                      ),
+                    };
+                    sync(next);
+                  }
+                }}
+              >
+                Удалить группу
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            className={styles.structuredField__add}
+            onClick={() => {
+              const next = [...sections];
+              const sec = next[sectionIndex];
+              if (sec) {
+                next[sectionIndex] = {
+                  ...sec,
+                  groups: [...(sec.groups ?? []), emptyFeatureGroup()],
+                };
+                sync(next);
+              }
+            }}
+          >
+            + Добавить группу в секцию
+          </button>
+          <button
+            type="button"
+            className={styles.structuredField__remove}
+            onClick={() => sync(sections.filter((_, i) => i !== sectionIndex))}
+          >
+            Удалить секцию
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className={styles.structuredField__add}
+        onClick={() => sync([...sections, emptyFeatureSection()])}
+      >
+        + Добавить секцию
       </button>
     </div>
   );

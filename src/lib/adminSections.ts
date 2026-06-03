@@ -331,6 +331,32 @@ export const BLOG_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
   },
 ];
 
+/** Страница «Интеграции» `/[lang]/integrations`. */
+export const INTEGRATIONS_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
+  {
+    id: "seo",
+    title: "SEO страницы «Интеграции»",
+    description: "Заголовок и описание в поиске",
+    keys: [
+      "page.integrations.seo.title",
+      "page.integrations.seo.description",
+    ],
+  },
+  {
+    id: "hero",
+    title: "Заголовок страницы",
+    description: "H1 и подзаголовок на /integrations",
+    keys: ["page.integrations.title", "page.integrations.subtitle"],
+  },
+  {
+    id: "services",
+    title: "Карточки услуг",
+    description:
+      "Список на странице интеграций: заголовок, описание, ссылка (путь без языка)",
+    keys: ["page.integrations.items"],
+  },
+];
+
 /** Страница «Оборудование» `/[lang]/equipment` — только SEO и hero списка. */
 export const EQUIPMENT_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
   {

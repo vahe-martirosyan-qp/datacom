@@ -8,16 +8,17 @@ import {
 } from "@/lib/server/contentStore";
 
 interface Props {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     return {};
   }
-  const entries = getPageContent(params.lang, "blog");
+  const entries = getPageContent(resolvedParams.lang, "blog");
   const map = entries ? entriesToMap(entries) : {};
   const title =
     map["page.blog.seo.title"]?.trim() ||
@@ -31,16 +32,17 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SiteBlogPage({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
 
-  const entries = getPageContent(params.lang, "blog");
+  const entries = getPageContent(resolvedParams.lang, "blog");
   if (!entries) {
     notFound();
   }
 
-  return <BlogPageView lang={params.lang} />;
+  return <BlogPageView lang={resolvedParams.lang} />;
 }

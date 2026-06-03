@@ -21,6 +21,7 @@ import {
   CompanyStatsEditor,
   ContactOfficesEditor,
   EquipmentCategoriesEditor,
+  EquipmentFeatureSectionsEditor,
   EquipmentHighlightsEditor,
   EquipmentProductImagesEditor,
   EquipmentProductsEditor,
@@ -31,6 +32,8 @@ import {
   ProjectCardsEditor,
   MegaNavEditor,
   NavItemsEditor,
+  IntegrationServicesEditor,
+  IntegrationSingleCategoryEditor,
   SpotlightCardsEditor,
   StepItemsEditor,
 } from "./StructuredFieldEditors";
@@ -63,9 +66,13 @@ interface SectionEditorModalProps {
     | "privacy"
     | "blog"
     | "equipment"
+    | "integrations"
+    | "integrationCategory"
     | "equipmentProduct";
   /** When editing one equipment category card in mega-menu (`section.id === "card"`). */
   equipmentCategorySlug?: string;
+  /** When editing one integrations service card in mega-menu (`section.id === "card"`). */
+  integrationCategorySlug?: string;
   /** When editing an equipment product detail page. */
   equipmentProductCategorySlug?: string;
   equipmentProductSlug?: string;
@@ -121,6 +128,7 @@ export function SectionEditorModal({
   syncLanguageCodes,
   contentPage = "home",
   equipmentCategorySlug,
+  integrationCategorySlug,
   equipmentProductCategorySlug,
   equipmentProductSlug,
 }: SectionEditorModalProps) {
@@ -178,7 +186,15 @@ export function SectionEditorModal({
                 ? queryKeys.contentBlog(payload.lang)
                 : contentPage === "equipment"
                   ? queryKeys.contentEquipment(payload.lang)
-                  : contentPage === "equipmentProduct" &&
+                  : contentPage === "integrations"
+                    ? queryKeys.contentIntegrations(payload.lang)
+                    : contentPage === "integrationCategory" &&
+                        integrationCategorySlug
+                      ? queryKeys.contentIntegrationCategory(
+                          payload.lang,
+                          integrationCategorySlug
+                        )
+                      : contentPage === "equipmentProduct" &&
                       equipmentProductCategorySlug &&
                       equipmentProductSlug
                     ? queryKeys.contentEquipmentProduct(
@@ -225,6 +241,9 @@ export function SectionEditorModal({
       const hasEquipmentKeys = Object.keys(payload.values).some((k) =>
         k.startsWith("page.equipment.")
       );
+      const hasIntegrationsKeys = Object.keys(payload.values).some((k) =>
+        k.startsWith("page.integrations.")
+      );
       const hasMegaMenuKey = Object.keys(payload.values).includes(
         "home.nav.megaMenu"
       );
@@ -253,12 +272,20 @@ export function SectionEditorModal({
           queryKey: queryKeys.contentEquipment(payload.lang),
         });
       }
+      if (contentPage === "integrations" || hasIntegrationsKeys) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentIntegrations(payload.lang),
+        });
+      }
       if (hasMegaMenuKey) {
         await queryClient.invalidateQueries({
           queryKey: queryKeys.content("home", payload.lang),
         });
         await queryClient.invalidateQueries({
           queryKey: queryKeys.contentEquipment(payload.lang),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentIntegrations(payload.lang),
         });
       }
       const savedClientBrands = Object.prototype.hasOwnProperty.call(
@@ -294,6 +321,7 @@ export function SectionEditorModal({
       const projectSegments = new Set<string>();
       const blogPostSegments = new Set<string>();
       const equipmentCategorySegments = new Set<string>();
+      const integrationCategorySegments = new Set<string>();
       const equipmentProductSegments = new Set<string>();
       for (const k of Object.keys(payload.values)) {
         const m = k.match(/^project\.([^.]+)\./);
@@ -311,6 +339,10 @@ export function SectionEditorModal({
         const e = k.match(/^equipment\.(?!product\.)([^.]+)\./);
         if (e?.[1]) {
           equipmentCategorySegments.add(e[1]);
+        }
+        const i = k.match(/^integration\.([^.]+)\./);
+        if (i?.[1]) {
+          integrationCategorySegments.add(i[1]);
         }
       }
       /** Project saves: refresh every locale for this segment (hero is shared; fields differ per lang). */
@@ -349,6 +381,24 @@ export function SectionEditorModal({
         }
         await queryClient.invalidateQueries({
           queryKey: queryKeys.contentEquipment(payload.lang),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.content("home", payload.lang),
+        });
+      }
+      if (contentPage === "integrationCategory" || integrationCategorySegments.size > 0) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentIntegrations(payload.lang),
+        });
+      }
+      for (const s of integrationCategorySegments) {
+        for (const lc of langsToRefresh) {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.contentIntegrationCategory(lc, s),
+          });
+        }
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentIntegrations(payload.lang),
         });
         await queryClient.invalidateQueries({
           queryKey: queryKeys.content("home", payload.lang),
@@ -428,6 +478,21 @@ export function SectionEditorModal({
       );
     }
 
+    if (
+      section?.id === "card" &&
+      integrationCategorySlug &&
+      key === "home.nav.megaMenu"
+    ) {
+      return (
+        <IntegrationSingleCategoryEditor
+          key={key}
+          categorySlug={integrationCategorySlug}
+          value={value}
+          onChange={(v) => setKey(key, v)}
+        />
+      );
+    }
+
     switch (kind) {
       case "navItems":
         return (
@@ -464,6 +529,14 @@ export function SectionEditorModal({
       case "spotlightCards":
         return (
           <SpotlightCardsEditor
+            key={key}
+            value={value}
+            onChange={(v) => setKey(key, v)}
+          />
+        );
+      case "integrationServices":
+        return (
+          <IntegrationServicesEditor
             key={key}
             value={value}
             onChange={(v) => setKey(key, v)}
@@ -520,6 +593,14 @@ export function SectionEditorModal({
       case "equipmentHighlights":
         return (
           <EquipmentHighlightsEditor
+            key={key}
+            value={value}
+            onChange={(v) => setKey(key, v)}
+          />
+        );
+      case "equipmentFeatureSections":
+        return (
+          <EquipmentFeatureSectionsEditor
             key={key}
             value={value}
             onChange={(v) => setKey(key, v)}

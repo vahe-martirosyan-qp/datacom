@@ -8,16 +8,17 @@ import {
 } from "@/lib/server/contentStore";
 
 interface Props {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     return {};
   }
-  const entries = getPageContent(params.lang, "contacts");
+  const entries = getPageContent(resolvedParams.lang, "contacts");
   const map = entries ? entriesToMap(entries) : {};
   const title =
     map["page.contacts.seo.title"]?.trim() ||
@@ -31,16 +32,17 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SiteContactsPage({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
 
-  const entries = getPageContent(params.lang, "contacts");
+  const entries = getPageContent(resolvedParams.lang, "contacts");
   if (!entries) {
     notFound();
   }
 
-  return <ContactsPageView lang={params.lang} />;
+  return <ContactsPageView lang={resolvedParams.lang} />;
 }

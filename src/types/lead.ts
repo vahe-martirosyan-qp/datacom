@@ -4,6 +4,7 @@ export const LEAD_FORM_SOURCES = [
   "company",
   "equipment-category",
   "equipment-product-modal",
+  "integration-category",
 ] as const;
 
 export type LeadFormSource = (typeof LEAD_FORM_SOURCES)[number];

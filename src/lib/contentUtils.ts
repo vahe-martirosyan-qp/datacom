@@ -43,6 +43,7 @@ function normalizeNavHref(href: string): string {
   const legacy: Record<string, string> = {
     "#equipment": "equipment",
     "#integrations": "integrations",
+    "#integration": "integrations",
     "#about": "company",
     "#blog": "blog",
     "#contacts": "contacts",

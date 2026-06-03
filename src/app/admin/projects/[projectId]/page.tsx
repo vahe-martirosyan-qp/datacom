@@ -1,9 +1,10 @@
 import { AdminProjectSlugClient } from "@/components/admin/AdminProjectSlugClient";
 
 interface Props {
-  params: { projectId: string };
+  params: Promise<{ projectId: string }>;
 }
 
-export default function AdminProjectPage({ params }: Props) {
-  return <AdminProjectSlugClient projectId={params.projectId} />;
+export default async function AdminProjectPage({ params }: Props) {
+  const { projectId } = await params;
+  return <AdminProjectSlugClient projectId={projectId} />;
 }

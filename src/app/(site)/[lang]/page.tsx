@@ -8,12 +8,13 @@ import {
 } from "@/lib/server/contentStore";
 
 interface LangPageProps {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }
 
 export async function generateMetadata({ params }: LangPageProps) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
-  const entries = getPageContent(params.lang, "home");
+  const entries = getPageContent(resolvedParams.lang, "home");
   if (!entries) {
     return {};
   }
@@ -25,11 +26,12 @@ export async function generateMetadata({ params }: LangPageProps) {
 }
 
 export default async function LangHomePage({ params }: LangPageProps) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
 
-  return <HomePageView lang={params.lang} />;
+  return <HomePageView lang={resolvedParams.lang} />;
 }

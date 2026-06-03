@@ -7,17 +7,18 @@ import {
 } from "@/lib/server/contentStore";
 
 interface RouteParams {
-  params: { projectId: string };
+  params: Promise<{ projectId: string }>;
 }
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
+  const resolvedParams = await params;
   try {
     await assertAdminSession();
   } catch {
     return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
   }
 
-  const raw = decodeURIComponent(params.projectId ?? "");
+  const raw = decodeURIComponent(resolvedParams.projectId ?? "");
   const segment = resolveProjectKeySegment(raw);
   if (!segment) {
     return NextResponse.json(

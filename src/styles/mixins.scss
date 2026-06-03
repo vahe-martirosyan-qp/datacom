@@ -76,3 +76,42 @@
     );
   }
 }
+
+/** TipTap / HTML body copy on inner pages (equipment, integrations, blog, …). */
+@mixin page-content-prose {
+  font-size: var(--text-lg);
+  line-height: 1.65;
+  color: var(--color-text);
+
+  :global(p) {
+    margin: 0 0 0.85em;
+  }
+
+  :global(h2) {
+    margin: 1.5em 0 0.6em;
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  :global(h3) {
+    margin: 1.25em 0 0.5em;
+    font-size: var(--text-xl);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  :global(ul),
+  :global(ol) {
+    margin: 0 0 1em;
+    padding-left: 1.35em;
+  }
+
+  :global(li) {
+    margin-bottom: 0.35em;
+  }
+
+  :global(a) {
+    color: var(--color-link);
+  }
+}

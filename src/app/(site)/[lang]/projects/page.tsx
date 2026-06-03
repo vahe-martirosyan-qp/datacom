@@ -8,16 +8,17 @@ import {
 } from "@/lib/server/contentStore";
 
 interface Props {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     return {};
   }
-  const entries = getPageContent(params.lang, "home");
+  const entries = getPageContent(resolvedParams.lang, "home");
   const map = entries ? entriesToMap(entries) : {};
   const siteName =
     (map["home.seo.title"] ?? "Datacom").split(/[—–-]/)[0]?.trim() ??
@@ -29,11 +30,12 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SiteProjectsIndexPage({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
 
-  return <SiteProjectsIndexView lang={params.lang} />;
+  return <SiteProjectsIndexView lang={resolvedParams.lang} />;
 }

@@ -13,6 +13,7 @@ const NAV: { href: string; label: string }[] = [
   { href: "/admin/contacts", label: "Контакты" },
   { href: "/admin/privacy", label: "Политика конфиденциальности" },
   { href: "/admin/equipment", label: "Оборудование и системы" },
+  { href: "/admin/integrations", label: "Интеграции" },
   { href: "/admin/blog", label: "Блог" },
   { href: "/admin/projects", label: "Проекты" },
   { href: "/admin/navigation", label: "Меню (просмотр)" },

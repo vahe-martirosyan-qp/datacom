@@ -38,6 +38,7 @@ export function TiptapRichTextEditor({
 
   const editor = useEditor({
     immediatelyRender: false,
+    shouldRerenderOnTransaction: false,
     extensions,
     content: value || "",
     editorProps: {
@@ -50,14 +51,6 @@ export function TiptapRichTextEditor({
       onChangeRef.current(ed.getHTML());
     },
   });
-
-  useEffect(() => {
-    return () => {
-      if (editor && !editor.isDestroyed) {
-        editor.destroy();
-      }
-    };
-  }, [editor]);
 
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
@@ -223,7 +216,7 @@ export function TiptapRichTextEditor({
         </button>
       </div>
       <div className={styles.tiptapRichTextEditor__frame}>
-        <EditorContent editor={editor} />
+        {!editor.isDestroyed ? <EditorContent editor={editor} /> : null}
       </div>
     </div>
   );

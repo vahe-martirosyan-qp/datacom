@@ -9,22 +9,23 @@ export const dynamic = "force-dynamic";
 
 interface SiteLangLayoutProps {
   children: ReactNode;
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }
 
 export default async function SiteLangLayout({
   children,
   params,
 }: SiteLangLayoutProps) {
+  const { lang } = await params;
   await ensureContentStoreHydrated();
-  const meta = getLanguageByCode(params.lang);
-  const dir = resolveLanguageDir(meta, params.lang);
+  const meta = getLanguageByCode(lang);
+  const dir = resolveLanguageDir(meta, lang);
   const rtl = dir === "rtl";
 
   return (
     <div
       className={`site-lang-root${rtl ? " site-lang-root--rtl" : ""}`}
-      lang={params.lang}
+      lang={lang}
       dir={dir}
       suppressHydrationWarning
     >

@@ -1,14 +1,15 @@
 import { AdminEquipmentProductSlugClient } from "@/components/admin/AdminEquipmentProductSlugClient";
 
 interface Props {
-  params: { slug: string; productSlug: string };
+  params: Promise<{ slug: string; productSlug: string }>;
 }
 
-export default function AdminEquipmentProductPage({ params }: Props) {
+export default async function AdminEquipmentProductPage({ params }: Props) {
+  const { slug, productSlug } = await params;
   return (
     <AdminEquipmentProductSlugClient
-      categorySlug={params.slug}
-      productSlug={params.productSlug}
+      categorySlug={slug}
+      productSlug={productSlug}
     />
   );
 }

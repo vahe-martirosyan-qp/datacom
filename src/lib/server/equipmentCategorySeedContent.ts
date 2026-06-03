@@ -1,5 +1,9 @@
 import type { ContentEntry } from "@/types";
-import type { EquipmentProductItem, EquipmentSpecItem } from "@/types/site";
+import type {
+  EquipmentFeatureSection,
+  EquipmentProductItem,
+  EquipmentSpecItem,
+} from "@/types/site";
 
 const IMG_LOCK =
   "https://images.unsplash.com/photo-1558008280-b9d87398e043?w=1600&q=80";
@@ -51,6 +55,8 @@ interface EquipmentCategorySeedDef {
   backLabelRu: string;
   bodyHtmlEn: string;
   bodyHtmlRu: string;
+  featureSectionsEn?: EquipmentFeatureSection[];
+  featureSectionsRu?: EquipmentFeatureSection[];
 }
 
 const IMG_LOCK_CARD =
@@ -135,7 +141,7 @@ const LOCKS_SPECS_EN: EquipmentSpecItem[] = [
   },
   {
     title: "Integration",
-    desc: "Works with major PMS and access platforms: TravelLine, Opera, Fidelio, Logus, 1C and others.",
+    desc: "Integration with any property management systems: TravelLine, Opera, Fidelio, Epitome, Logus, Edelweiss, Shelter, 1C, Intellect Style, Raduga and others.",
   },
 ];
 
@@ -154,13 +160,64 @@ const LOCKS_SPECS_RU: EquipmentSpecItem[] = [
   },
   {
     title: "Интеграция",
-    desc: "Интеграция с PMS и системами контроля доступа: TravelLine, Opera, Fidelio, Logus, 1C и др.",
+    desc: "Интеграция с любыми автоматизированными системами управления: TravelLine, Opera, Fidelio, Epitome, Logus, Эдельвейс, Shelter, 1C, Intellect Style, Радуга.",
   },
 ];
 
-const LOCKS_BODY_EN = `<h2>Electronic hotel locks for every property type</h2><p>Stylish, minimal design with multiple ways to open guest rooms — RFID cards, BLE mobile keys and numeric codes.</p><ul><li>Surface-mounted and mortise lock sets</li><li>Open-format MIFARE 1K cards</li><li>Centralized management for large properties</li><li>App-based control for smaller hotels</li></ul><h2>Omnitec electronic locks</h2><p>For more than 25 years Omnitec has designed and manufactured electronic locks, safes and minibars for hospitality worldwide. Omnitec products meet hotel safety standards on both mechanical and electronic levels.</p>`;
+const LOCKS_FEATURE_SECTIONS_EN: EquipmentFeatureSection[] = [
+  {
+    title: "A wide range of electronic hotel locks for every property type",
+    imageUrl: IMG_LOCK_CARD,
+    groups: [
+      {
+        subtitle: "Stylish, minimal design",
+        chips: [
+          "Multiple ways to access guest rooms",
+          "Open-format MIFARE 1K cards",
+        ],
+        lines: [
+          "Open with a smartphone using BLE",
+          "Open with a digital code",
+        ],
+      },
+      {
+        subtitle: "Flexible management options",
+        chips: ["Centralized (for large properties)"],
+        lines: ["App-based control (for smaller properties)"],
+      },
+    ],
+  },
+];
 
-const LOCKS_BODY_RU = `<h2>Широкая линейка электронных гостиничных замков</h2><p>Стильный минималистичный дизайн и различные способы доступа в номера — RFID-карты, BLE на смартфоне и цифровой код.</p><ul><li>Замки-накладки и врезные комплекты</li><li>Открытые карты стандарта MIFARE 1K</li><li>Централизованное управление для крупных объектов</li><li>Управление через приложение для небольших отелей</li></ul><h2>Электронные замки Omnitec</h2><p>Более 25 лет Omnitec разрабатывает и производит электронные замки, сейфы и минибары для гостиничного рынка. Оборудование соответствует стандартам безопасности, применяемым в отелях на механическом и электронном уровнях.</p>`;
+const LOCKS_FEATURE_SECTIONS_RU: EquipmentFeatureSection[] = [
+  {
+    title:
+      "Широкая линейка электронных гостиничных замков для любого типа объекта размещения",
+    imageUrl: IMG_LOCK_CARD,
+    groups: [
+      {
+        subtitle: "Стильный и минималистичный дизайн",
+        chips: [
+          "Различные способы доступа в номера",
+          "Открытые карты стандарта MIFARE 1K",
+        ],
+        lines: [
+          "Открытие смартфоном с помощью технологии BLE",
+          "Открытие с помощью цифрового кода",
+        ],
+      },
+      {
+        subtitle: "Различные способы управления",
+        chips: ["Централизованное (для крупных объектов)"],
+        lines: ["Управление через приложение (для небольших объектов)"],
+      },
+    ],
+  },
+];
+
+const LOCKS_BODY_EN = `<h2>Omnitec electronic locks</h2><p>For more than 25 years OMNITEC SYSTEMS has been designing, manufacturing and supplying electronic locks, safes and minibars for the hospitality market. Omnitec equipment has become widely popular thanks to its focus on hotel needs worldwide.</p><p>Today the company name is synonymous with quality, reliability and security. Omnitec locks and access devices meet the safety standards used in hotels at both mechanical and electronic levels.</p>`;
+
+const LOCKS_BODY_RU = `<h2>Электронные замки Omnitec</h2><p>OMNITEC SYSTEMS уже более 25 лет занимается разработкой, производством и реализацией электронных замков, сейфов и минибаров для гостиничного рынка. Оборудование компании OMNITEC приобрело огромную популярность благодаря ориентированности на потребности отелей во всем мире.</p><p>Сегодня наименование компании является синонимом качества, надежности и безопасности. Замки и устройства контроля доступа производства компании Omnitec отвечают требованиям стандартов безопасности, используемых в гостиницах, как на механическом, так и на электронном уровнях.</p>`;
 
 const GENERIC_BODY_EN =
   "<p>Datacom supplies, integrates and supports this equipment category for hotels and hospitality projects across Russia.</p><p>Contact us for specifications, project design and commissioning.</p>";
@@ -225,6 +282,8 @@ const SEED_DEFS: EquipmentCategorySeedDef[] = [
     backLabelRu: "← Оборудование и системы",
     bodyHtmlEn: LOCKS_BODY_EN,
     bodyHtmlRu: LOCKS_BODY_RU,
+    featureSectionsEn: LOCKS_FEATURE_SECTIONS_EN,
+    featureSectionsRu: LOCKS_FEATURE_SECTIONS_RU,
   },
   {
     slug: "minibars",
@@ -552,6 +611,15 @@ export function equipmentCategorySeedEntriesForLang(
     out[`${p}.bodyHtml`] = entry(
       `${p}.bodyHtml`,
       isRu ? def.bodyHtmlRu : def.bodyHtmlEn
+    );
+    out[`${p}.featureSections`] = entry(
+      `${p}.featureSections`,
+      JSON.stringify(
+        isRu
+          ? (def.featureSectionsRu ?? [])
+          : (def.featureSectionsEn ?? [])
+      ),
+      "json"
     );
   }
 

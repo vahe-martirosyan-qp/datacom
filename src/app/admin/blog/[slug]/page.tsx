@@ -1,9 +1,10 @@
 import { AdminBlogSlugClient } from "@/components/admin/AdminBlogSlugClient";
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
-export default function AdminBlogPostPage({ params }: Props) {
-  return <AdminBlogSlugClient slug={params.slug} />;
+export default async function AdminBlogPostPage({ params }: Props) {
+  const { slug } = await params;
+  return <AdminBlogSlugClient slug={slug} />;
 }

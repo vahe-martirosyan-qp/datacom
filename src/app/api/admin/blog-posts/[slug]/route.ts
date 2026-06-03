@@ -7,17 +7,18 @@ import {
 } from "@/lib/server/contentStore";
 
 interface RouteParams {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
+  const resolvedParams = await params;
   try {
     await assertAdminSession();
   } catch {
     return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
   }
 
-  const raw = decodeURIComponent(params.slug ?? "");
+  const raw = decodeURIComponent(resolvedParams.slug ?? "");
   const segment = resolveBlogKeySegment(raw);
   if (!segment) {
     return NextResponse.json(

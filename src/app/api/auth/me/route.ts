@@ -5,7 +5,7 @@ import { verifyAccessToken } from "@/lib/server/jwt";
 import type { AuthMeResponse } from "@/types";
 
 export async function GET() {
-  const token = cookies().get(COOKIE_ACCESS)?.value;
+  const token = (await cookies()).get(COOKIE_ACCESS)?.value;
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

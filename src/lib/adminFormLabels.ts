@@ -113,6 +113,11 @@ export const ADMIN_FORM_LABELS: Record<string, string> = {
   "page.equipment.seo.description": "SEO description",
   "page.equipment.title": "Заголовок H1",
   "page.equipment.subtitle": "Подзаголовок под H1",
+  "page.integrations.seo.title": "SEO title страницы «Интеграции»",
+  "page.integrations.seo.description": "SEO description",
+  "page.integrations.title": "Заголовок H1",
+  "page.integrations.subtitle": "Подзаголовок под H1",
+  "page.integrations.items": "Карточки услуг (JSON)",
   "home.footer.phone": "Телефон",
   "home.footer.phoneNote": "Подпись к телефону",
   "home.footer.email": "Email",
@@ -195,6 +200,9 @@ export function adminFormLabel(key: string): string {
     }
     if (field === "highlights") {
       return "Быстрые пункты (+)";
+    }
+    if (field === "featureSections") {
+      return "Секции с подзаголовками и чипами";
     }
     if (field === "products") {
       return "Товары в блоке «Решения в категории»";

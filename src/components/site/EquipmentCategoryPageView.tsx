@@ -18,7 +18,11 @@ import {
   parseEquipmentCategoryProductCatalog,
 } from "@/lib/equipmentCategoryProductsUtils";
 import { resolveEquipmentCategoryProductCardLink } from "@/lib/equipmentProductHrefUtils";
-import type { EquipmentProductItem, EquipmentSpecItem } from "@/types/site";
+import type {
+  EquipmentFeatureSection,
+  EquipmentProductItem,
+  EquipmentSpecItem,
+} from "@/types/site";
 import { SiteChrome } from "./SiteChrome";
 import { SiteContactStrip } from "./SiteContactStrip";
 import { SiteLeadForm } from "./SiteLeadForm";
@@ -70,6 +74,27 @@ export function EquipmentCategoryPageView({
   const highlights = nonEmptyLines(
     parseJsonArray<string>(map[`${prefix}.highlights`] ?? "[]", [])
   );
+  const featureSections = useMemo(() => {
+    const raw = parseJsonArray<EquipmentFeatureSection>(
+      map[`${prefix}.featureSections`] ?? "[]",
+      []
+    );
+    return raw
+      .map((section) => ({
+        title: section.title?.trim() ?? "",
+        imageUrl: section.imageUrl?.trim() ?? "",
+        groups: (section.groups ?? [])
+          .map((group) => ({
+            subtitle: group.subtitle?.trim() ?? "",
+            chips: nonEmptyLines(group.chips ?? []),
+            lines: nonEmptyLines(group.lines ?? []),
+          }))
+          .filter(
+            (g) => g.subtitle || g.chips.length > 0 || g.lines.length > 0
+          ),
+      }))
+      .filter((s) => s.title || s.imageUrl || s.groups.length > 0);
+  }, [map, prefix]);
   const productsTitle = map[`${prefix}.productsTitle`]?.trim() ?? "";
   const products = useMemo(() => {
     const catalog = parseEquipmentCategoryProductCatalog(
@@ -231,6 +256,104 @@ export function EquipmentCategoryPageView({
                 ) : null}
               </div>
             </header>
+
+            {featureSections.map((section) => (
+              <section
+                key={section.title || section.imageUrl}
+                className={styles.equipmentCategoryPage__section}
+              >
+                <div className={styles.equipmentCategoryPage__sectionInner}>
+                  {section.title ? (
+                    <h2 className={styles.equipmentCategoryPage__sectionTitle}>
+                      {section.title}
+                    </h2>
+                  ) : null}
+                  <div className={styles.equipmentCategoryPage__featureLayout}>
+                    {section.groups.length > 0 ? (
+                      <div className={styles.equipmentCategoryPage__featureCopy}>
+                        {section.groups.map((group) => (
+                          <div
+                            key={`${section.title}-${group.subtitle}`}
+                            className={
+                              styles.equipmentCategoryPage__featureGroup
+                            }
+                          >
+                            {group.subtitle ? (
+                              <h3
+                                className={
+                                  styles.equipmentCategoryPage__featureSubtitle
+                                }
+                              >
+                                {group.subtitle}
+                              </h3>
+                            ) : null}
+                            {group.chips.length > 0 ? (
+                              <ul
+                                className={
+                                  styles.equipmentCategoryPage__featureChips
+                                }
+                              >
+                                {group.chips.map((line) => (
+                                  <li
+                                    key={line}
+                                    className={
+                                      styles.equipmentCategoryPage__featureChip
+                                    }
+                                  >
+                                    <span
+                                      className={
+                                        styles.equipmentCategoryPage__featureChipMark
+                                      }
+                                      aria-hidden
+                                    >
+                                      +
+                                    </span>
+                                    {line}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                            {group.lines.length > 0 ? (
+                              <ul
+                                className={
+                                  styles.equipmentCategoryPage__featureLines
+                                }
+                              >
+                                {group.lines.map((line) => (
+                                  <li
+                                    key={line}
+                                    className={
+                                      styles.equipmentCategoryPage__featureLine
+                                    }
+                                  >
+                                    {line}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {section.imageUrl ? (
+                      <figure
+                        className={styles.equipmentCategoryPage__featureMedia}
+                      >
+                        <Image
+                          src={section.imageUrl}
+                          alt=""
+                          fill
+                          className={
+                            styles.equipmentCategoryPage__featureImg
+                          }
+                          sizes="(max-width: 1024px) 100vw, 42vw"
+                        />
+                      </figure>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
+            ))}
 
             {bodyHtml ? (
               <section className={styles.equipmentCategoryPage__section}>

@@ -53,8 +53,15 @@ import {
   EQUIPMENT_PAGE_SUBTITLE_EN,
   EQUIPMENT_PAGE_SUBTITLE_RU,
 } from "@/lib/server/equipmentPageSeedContent";
+import {
+  INTEGRATIONS_ITEMS_EN,
+  INTEGRATIONS_ITEMS_RU,
+  INTEGRATIONS_PAGE_SUBTITLE_EN,
+  INTEGRATIONS_PAGE_SUBTITLE_RU,
+} from "@/lib/server/integrationsPageSeedContent";
 import { blogPostSeedEntriesForLang } from "@/lib/server/blogPostSeedContent";
 import { equipmentCategorySeedEntriesForLang } from "@/lib/server/equipmentCategorySeedContent";
+import { integrationCategorySeedEntriesForLang } from "@/lib/server/integrationCategorySeedContent";
 import { equipmentProductSeedEntriesForLang } from "@/lib/server/equipmentProductSeedContent";
 import {
   buildProductCatalogJsonForCategory,
@@ -77,10 +84,19 @@ import {
   slugifyEquipmentCategoryTitle,
 } from "@/lib/equipmentHrefUtils";
 import {
+  integrationCategoryHrefFromSlug,
+  integrationCategorySlugFromNavHref,
+  normalizeIntegrationCategorySlug,
+  slugifyIntegrationCategoryTitle,
+} from "@/lib/integrationsHrefUtils";
+import {
   findEquipmentMegaItemIndex,
   parseMegaMenuItems,
   serializeMegaMenuItems,
 } from "@/lib/equipmentNavUtils";
+import { findIntegrationsMegaItemIndex } from "@/lib/integrationsNavUtils";
+import type { SpotlightCard } from "@/types/site";
+import { parseJsonArray } from "@/lib/contentUtils";
 import { cookieConsentSeedEntriesForLang } from "@/lib/server/cookieConsentSeedContent";
 import { privacyPageSeedEntriesForLang } from "@/lib/server/privacyPageSeedContent";
 import { reconcileCookieConsentSeeds } from "@/lib/server/cookieConsentSeedSync";
@@ -666,6 +682,32 @@ const enHome: Record<string, ContentEntry> = {
     key: "page.equipment.subtitle",
     value: EQUIPMENT_PAGE_SUBTITLE_EN,
     type: "text",
+  },
+  "page.integrations.seo.title": {
+    key: "page.integrations.seo.title",
+    value: "Integrations — Datacom",
+    type: "text",
+  },
+  "page.integrations.seo.description": {
+    key: "page.integrations.seo.description",
+    value:
+      "Hotel IT system design, support, modernization, audit and commissioning across Russia.",
+    type: "text",
+  },
+  "page.integrations.title": {
+    key: "page.integrations.title",
+    value: "Integrations",
+    type: "text",
+  },
+  "page.integrations.subtitle": {
+    key: "page.integrations.subtitle",
+    value: INTEGRATIONS_PAGE_SUBTITLE_EN,
+    type: "text",
+  },
+  "page.integrations.items": {
+    key: "page.integrations.items",
+    value: INTEGRATIONS_ITEMS_EN,
+    type: "json",
   },
   "home.lead.title": {
     key: "home.lead.title",
@@ -1351,6 +1393,32 @@ const ruHome: Record<string, ContentEntry> = {
     value: EQUIPMENT_PAGE_SUBTITLE_RU,
     type: "text",
   },
+  "page.integrations.seo.title": {
+    key: "page.integrations.seo.title",
+    value: "Интеграции — Datacom",
+    type: "text",
+  },
+  "page.integrations.seo.description": {
+    key: "page.integrations.seo.description",
+    value:
+      "Проектирование, поддержка, модернизация, аудит и пуско-наладка гостиничных IT-систем по России.",
+    type: "text",
+  },
+  "page.integrations.title": {
+    key: "page.integrations.title",
+    value: "Интеграции",
+    type: "text",
+  },
+  "page.integrations.subtitle": {
+    key: "page.integrations.subtitle",
+    value: INTEGRATIONS_PAGE_SUBTITLE_RU,
+    type: "text",
+  },
+  "page.integrations.items": {
+    key: "page.integrations.items",
+    value: INTEGRATIONS_ITEMS_RU,
+    type: "json",
+  },
   "home.lead.title": {
     key: "home.lead.title",
     value: "Оставьте контакты — мы свяжемся с вами",
@@ -1467,6 +1535,8 @@ Object.assign(enHome, blogPostSeedEntriesForLang("en"));
 Object.assign(ruHome, blogPostSeedEntriesForLang("ru"));
 Object.assign(enHome, equipmentCategorySeedEntriesForLang("en"));
 Object.assign(ruHome, equipmentCategorySeedEntriesForLang("ru"));
+Object.assign(enHome, integrationCategorySeedEntriesForLang("en"));
+Object.assign(ruHome, integrationCategorySeedEntriesForLang("ru"));
 Object.assign(enHome, equipmentProductSeedEntriesForLang("en"));
 Object.assign(ruHome, equipmentProductSeedEntriesForLang("ru"));
 Object.assign(enHome, cookieConsentSeedEntriesForLang("en"));
@@ -2136,6 +2206,45 @@ export function getPageContent(
       return null;
     }
     return entries.sort((a, b) => a.key.localeCompare(b.key));
+  }
+  if (page === "integrations") {
+    const prefix = "page.integrations.";
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    return entries.sort((a, b) => a.key.localeCompare(b.key));
+  }
+  if (page === "integrationCategory" && slug) {
+    const segment = normalizeIntegrationCategorySlug(slug);
+    if (!segment) {
+      return null;
+    }
+    const prefix = `integration.${segment}.`;
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    let outEntries = entries.sort((a, b) => a.key.localeCompare(b.key));
+    const heroKey = `integration.${segment}.heroImage`;
+    const byKey = new Map(outEntries.map((e) => [e.key, { ...e }]));
+    const heroEntry = byKey.get(heroKey);
+    const heroEmpty = !heroEntry?.value?.trim();
+    if (heroEmpty && lang !== "en" && byLang.en) {
+      const enHero = byLang.en[heroKey];
+      if (enHero?.value?.trim()) {
+        if (heroEntry) {
+          byKey.set(heroKey, { ...heroEntry, value: enHero.value });
+        } else {
+          byKey.set(heroKey, {
+            key: heroKey,
+            value: enHero.value,
+            type: enHero.type,
+          });
+        }
+      }
+    }
+    return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
   }
   if (page === "equipmentCategory" && slug) {
     const segment = normalizeEquipmentCategorySlug(slug);
@@ -2860,6 +2969,7 @@ const EQUIPMENT_CATEGORY_STUB_FIELDS = [
   "subtitle",
   "heroImage",
   "highlights",
+  "featureSections",
   "productsTitle",
   "products",
   "specsTitle",
@@ -2928,6 +3038,7 @@ export async function ensureEquipmentCategoryStub(
           initial = initialTitle;
         } else if (
           field === "highlights" ||
+          field === "featureSections" ||
           field === "products" ||
           field === "specs"
         ) {
@@ -2937,6 +3048,7 @@ export async function ensureEquipmentCategoryStub(
           field === "heroImage"
             ? "image"
             : field === "highlights" ||
+                field === "featureSections" ||
                 field === "products" ||
                 field === "specs"
               ? "json"
@@ -3145,6 +3257,384 @@ export function uniqueEquipmentCategorySlug(base: string): string {
     n++;
   }
   return `${slug}-${n}`;
+}
+
+const INTEGRATION_CATEGORY_STUB_FIELDS = [
+  "seo.title",
+  "seo.description",
+  "eyebrow",
+  "title",
+  "subtitle",
+  "heroImage",
+  "highlights",
+  "specsTitle",
+  "specs",
+  "ctaLabel",
+  "ctaHref",
+  "pdfLabel",
+  "pdfHref",
+  "backLabel",
+  "bodyHtml",
+] as const;
+
+export function integrationCategorySlugExists(slug: string): boolean {
+  const segment = normalizeIntegrationCategorySlug(slug);
+  if (!segment) {
+    return false;
+  }
+  const prefix = `integration.${segment}.`;
+  for (const bucket of Object.values(byLang)) {
+    if (bucket && Object.keys(bucket).some((k) => k.startsWith(prefix))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function integrationCategoryInMegaMenu(slug: string): boolean {
+  const segment = normalizeIntegrationCategorySlug(slug);
+  if (!segment) {
+    return false;
+  }
+  const href = integrationCategoryHrefFromSlug(segment);
+  for (const bucket of Object.values(byLang)) {
+    const entry = bucket?.["home.nav.megaMenu"];
+    const items = parseMegaMenuItems(entry?.value ?? "");
+    const idx = findIntegrationsMegaItemIndex(items);
+    if (idx < 0) {
+      continue;
+    }
+    const children = items[idx]?.children ?? [];
+    if (
+      children.some(
+        (c) => integrationCategorySlugFromNavHref(c.href) === segment
+      )
+    ) {
+      return true;
+    }
+    if (children.some((c) => c.href === href)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function uniqueIntegrationCategorySlug(base: string): string {
+  let slug =
+    normalizeIntegrationCategorySlug(base) ??
+    slugifyIntegrationCategoryTitle(base);
+  if (
+    !integrationCategorySlugExists(slug) &&
+    !integrationCategoryInMegaMenu(slug)
+  ) {
+    return slug;
+  }
+  let n = 2;
+  while (
+    integrationCategorySlugExists(`${slug}-${n}`) ||
+    integrationCategoryInMegaMenu(`${slug}-${n}`)
+  ) {
+    n++;
+  }
+  return `${slug}-${n}`;
+}
+
+function syncIntegrationsHubItemsForLang(
+  lang: string,
+  segment: string,
+  mode: "upsert" | "remove"
+): void {
+  const bucket = byLang[lang];
+  if (!bucket) {
+    return;
+  }
+  const hubKey = "page.integrations.items";
+  const hubEntry = bucket[hubKey];
+  const items = parseJsonArray<SpotlightCard>(hubEntry?.value ?? "[]", []);
+  const href = integrationCategoryHrefFromSlug(segment);
+  const title =
+    bucket[`integration.${segment}.title`]?.value?.trim() || segment;
+  const desc =
+    bucket[`integration.${segment}.subtitle`]?.value?.trim() || "";
+  const imageUrl =
+    bucket[`integration.${segment}.heroImage`]?.value?.trim() || "";
+  const idx = items.findIndex(
+    (item) =>
+      integrationCategorySlugFromNavHref(item.href) === segment ||
+      item.href === href
+  );
+  if (mode === "remove") {
+    if (idx < 0) {
+      return;
+    }
+    const next = items.filter((_, i) => i !== idx);
+    assignContentEntry(lang, hubKey, JSON.stringify(next), "json");
+    return;
+  }
+  const row: SpotlightCard = {
+    title,
+    desc,
+    href,
+    ...(imageUrl ? { imageUrl } : {}),
+  };
+  const next = [...items];
+  if (idx >= 0) {
+    next[idx] = { ...next[idx], ...row };
+  } else {
+    next.push(row);
+  }
+  assignContentEntry(lang, hubKey, JSON.stringify(next), "json");
+}
+
+export async function ensureIntegrationCategoryStub(
+  slug: string,
+  initialTitle = ""
+): Promise<void> {
+  const segment = normalizeIntegrationCategorySlug(slug);
+  if (!segment) {
+    return;
+  }
+  const toPersist: { lang: string; key: string }[] = [];
+  for (const lang of Object.keys(byLang)) {
+    for (const field of INTEGRATION_CATEGORY_STUB_FIELDS) {
+      const key = `integration.${segment}.${field}`;
+      if (!byLang[lang]?.[key]) {
+        let initial = "";
+        if (field === "title") {
+          initial = initialTitle;
+        } else if (field === "highlights" || field === "specs") {
+          initial = "[]";
+        }
+        const type: ContentValueType =
+          field === "heroImage"
+            ? "image"
+            : field === "highlights" || field === "specs"
+              ? "json"
+              : "text";
+        assignContentEntry(lang, key, initial, type);
+        toPersist.push({ lang, key });
+      } else if (field === "title" && initialTitle) {
+        const cur = byLang[lang]![key]!.value.trim();
+        if (!cur) {
+          assignContentEntry(lang, key, initialTitle, "text");
+          toPersist.push({ lang, key });
+        }
+      }
+    }
+    syncIntegrationsHubItemsForLang(lang, segment, "upsert");
+    toPersist.push({ lang, key: "page.integrations.items" });
+  }
+  if (toPersist.length === 0) {
+    return;
+  }
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await Promise.all(
+      toPersist.map(({ lang, key }) =>
+        upsertContentRow(lang, key, byLang[lang]![key]!)
+      )
+    );
+  } else {
+    savePersistedContent(byLang);
+  }
+}
+
+export async function appendIntegrationsMegaMenuChild(
+  slug: string,
+  options: { title?: string; desc?: string; imageUrl?: string }
+): Promise<void> {
+  const segment = normalizeIntegrationCategorySlug(slug);
+  if (!segment) {
+    return;
+  }
+  const href = integrationCategoryHrefFromSlug(segment);
+  const langsUpdated: string[] = [];
+
+  for (const lang of Object.keys(byLang)) {
+    const bucket = byLang[lang];
+    if (!bucket) {
+      continue;
+    }
+    const entry = bucket["home.nav.megaMenu"];
+    const items = parseMegaMenuItems(entry?.value ?? "");
+    const idx = findIntegrationsMegaItemIndex(items);
+    if (idx < 0) {
+      continue;
+    }
+    const row = items[idx];
+    if (!row) {
+      continue;
+    }
+    const children = [...(row.children ?? [])];
+    if (
+      children.some(
+        (c) => integrationCategorySlugFromNavHref(c.href) === segment
+      )
+    ) {
+      syncIntegrationsHubItemsForLang(lang, segment, "upsert");
+      continue;
+    }
+    const label =
+      options.title?.trim() ||
+      bucket[`integration.${segment}.title`]?.value?.trim() ||
+      segment;
+    const desc =
+      options.desc?.trim() ||
+      bucket[`integration.${segment}.subtitle`]?.value?.trim() ||
+      "";
+    const imageUrl =
+      options.imageUrl?.trim() ||
+      bucket[`integration.${segment}.heroImage`]?.value?.trim() ||
+      "";
+    children.push({
+      label,
+      href,
+      desc: desc || undefined,
+      imageUrl: imageUrl || undefined,
+    });
+    items[idx] = { ...row, children };
+    assignContentEntry(
+      lang,
+      "home.nav.megaMenu",
+      serializeMegaMenuItems(items),
+      "json"
+    );
+    syncIntegrationsHubItemsForLang(lang, segment, "upsert");
+    langsUpdated.push(lang);
+  }
+
+  if (langsUpdated.length === 0) {
+    return;
+  }
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await Promise.all(
+      langsUpdated.flatMap((lang) => [
+        upsertContentRow(
+          lang,
+          "home.nav.megaMenu",
+          byLang[lang]!["home.nav.megaMenu"]!
+        ),
+        upsertContentRow(
+          lang,
+          "page.integrations.items",
+          byLang[lang]!["page.integrations.items"]!
+        ),
+      ])
+    );
+  } else {
+    savePersistedContent(byLang);
+  }
+}
+
+export async function deleteIntegrationCategory(
+  rawSlug: string
+): Promise<boolean> {
+  const segment = normalizeIntegrationCategorySlug(rawSlug);
+  if (!segment) {
+    return false;
+  }
+  const prefix = `integration.${segment}.`;
+  const href = integrationCategoryHrefFromSlug(segment);
+
+  for (const lang of Object.keys(byLang)) {
+    const bucket = byLang[lang];
+    if (!bucket) {
+      continue;
+    }
+    for (const key of Object.keys(bucket)) {
+      if (key.startsWith(prefix)) {
+        delete bucket[key];
+      }
+    }
+    const entry = bucket["home.nav.megaMenu"];
+    if (entry) {
+      const items = parseMegaMenuItems(entry.value);
+      const idx = findIntegrationsMegaItemIndex(items);
+      if (idx >= 0) {
+        const row = items[idx];
+        if (row) {
+          const children = (row.children ?? []).filter(
+            (c) =>
+              integrationCategorySlugFromNavHref(c.href) !== segment &&
+              c.href !== href
+          );
+          items[idx] = { ...row, children };
+          assignContentEntry(
+            lang,
+            "home.nav.megaMenu",
+            serializeMegaMenuItems(items),
+            "json"
+          );
+        }
+      }
+    }
+    syncIntegrationsHubItemsForLang(lang, segment, "remove");
+  }
+
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await prisma.$transaction(async (tx) => {
+      await tx.contentEntry.deleteMany({
+        where: { key: { startsWith: prefix } },
+      });
+      const megaRows = await tx.contentEntry.findMany({
+        where: { key: "home.nav.megaMenu" },
+      });
+      for (const row of megaRows) {
+        const items = parseMegaMenuItems(row.value);
+        const idx = findIntegrationsMegaItemIndex(items);
+        if (idx < 0) {
+          continue;
+        }
+        const integrationsRow = items[idx];
+        if (!integrationsRow) {
+          continue;
+        }
+        const children = (integrationsRow.children ?? []).filter(
+          (c) =>
+            integrationCategorySlugFromNavHref(c.href) !== segment &&
+            c.href !== href
+        );
+        if (children.length === (integrationsRow.children ?? []).length) {
+          continue;
+        }
+        items[idx] = { ...integrationsRow, children };
+        const next = serializeMegaMenuItems(items);
+        await tx.contentEntry.update({
+          where: {
+            langCode_key: { langCode: row.langCode, key: "home.nav.megaMenu" },
+          },
+          data: { value: next },
+        });
+      }
+      for (const lang of Object.keys(byLang)) {
+        const hub = byLang[lang]?.["page.integrations.items"];
+        if (!hub) {
+          continue;
+        }
+        await tx.contentEntry.upsert({
+          where: {
+            langCode_key: {
+              langCode: lang,
+              key: "page.integrations.items",
+            },
+          },
+          create: {
+            langCode: lang,
+            key: "page.integrations.items",
+            value: hub.value,
+            type: hub.type,
+          },
+          update: { value: hub.value },
+        });
+      }
+    });
+  } else {
+    savePersistedContent(byLang);
+  }
+
+  return true;
 }
 
 const EQUIPMENT_PRODUCT_STUB_FIELDS = [

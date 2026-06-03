@@ -6,6 +6,7 @@ import type { AdminSectionDef } from "@/lib/adminSections";
 import { entriesToMap } from "@/lib/contentUtils";
 import { useBlogContentQuery } from "@/hooks/useBlogContentQuery";
 import { useEquipmentContentQuery } from "@/hooks/useEquipmentContentQuery";
+import { useIntegrationsContentQuery } from "@/hooks/useIntegrationsContentQuery";
 import { useCompanyContentQuery } from "@/hooks/useCompanyContentQuery";
 import { useContactsContentQuery } from "@/hooks/useContactsContentQuery";
 import { usePrivacyContentQuery } from "@/hooks/usePrivacyContentQuery";
@@ -30,7 +31,8 @@ interface AdminSectionGridProps {
     | "contacts"
     | "privacy"
     | "blog"
-    | "equipment";
+    | "equipment"
+    | "integrations";
 }
 
 export function AdminSectionGrid({
@@ -63,6 +65,7 @@ export function AdminSectionGrid({
   const privacyQuery = usePrivacyContentQuery(editLang);
   const blogQuery = useBlogContentQuery(editLang);
   const equipmentQuery = useEquipmentContentQuery(editLang);
+  const integrationsQuery = useIntegrationsContentQuery(editLang);
   const contentQuery =
     contentPage === "company"
       ? companyQuery
@@ -74,7 +77,9 @@ export function AdminSectionGrid({
             ? blogQuery
             : contentPage === "equipment"
               ? equipmentQuery
-              : homeQuery;
+              : contentPage === "integrations"
+                ? integrationsQuery
+                : homeQuery;
 
   const map = useMemo(() => {
     const base = contentQuery.data

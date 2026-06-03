@@ -80,39 +80,7 @@
   }
 
   &__body {
-    font-size: var(--text-base);
-    line-height: 1.65;
-    color: var(--color-text);
-
-    :global(p) {
-      margin: 0 0 0.85em;
-    }
-
-    :global(ul),
-    :global(ol) {
-      margin: 0 0 0.85em;
-      padding-inline-start: 1.25rem;
-    }
-
-    :global(li) {
-      margin-bottom: 0.35em;
-    }
-
-    :global(h2) {
-      margin: 1.5em 0 0.5em;
-      font-size: var(--text-xl);
-      font-weight: 700;
-    }
-
-    :global(h3) {
-      margin: 1em 0 0.4em;
-      font-size: var(--text-lg);
-      font-weight: 700;
-    }
-
-    :global(a) {
-      color: var(--color-link);
-    }
+    @include mixins.page-content-prose;
 
     :global(em) {
       font-style: italic;

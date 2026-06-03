@@ -13,46 +13,48 @@ import {
 } from "@/lib/server/contentStore";
 
 interface Props {
-  params: { lang: string; projectId: string };
+  params: Promise<{ lang: string; projectId: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     return {};
   }
-  const homeEntries = getPageContent(params.lang, "home");
+  const homeEntries = getPageContent(resolvedParams.lang, "home");
   const homeMap = homeEntries ? entriesToMap(homeEntries) : {};
   const siteName =
     (homeMap["home.seo.title"] ?? "Datacom").split(/[—–-]/)[0]?.trim() ??
     "Datacom";
 
-  const segment = resolveProjectKeySegment(params.projectId);
+  const segment = resolveProjectKeySegment(resolvedParams.projectId);
   if (!segment) {
     return { title: siteName };
   }
 
-  const projectEntries = getPageContent(params.lang, "project", segment);
+  const projectEntries = getPageContent(resolvedParams.lang, "project", segment);
   if (!projectEntries) {
     return { title: siteName };
   }
   const pmap = entriesToMap(projectEntries);
   const title =
-    pmap[`project.${segment}.title`]?.trim() || params.projectId;
+    pmap[`project.${segment}.title`]?.trim() || resolvedParams.projectId;
   return {
     title: `${title} — ${siteName}`,
   };
 }
 
 export default async function SiteProjectDetailPage({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
 
-  let rawParam = params.projectId;
+  let rawParam = resolvedParams.projectId;
   try {
     rawParam = decodeURIComponent(rawParam);
   } catch {
@@ -61,20 +63,20 @@ export default async function SiteProjectDetailPage({ params }: Props) {
   const legacySlug = normalizeNewProjectSlug(rawParam);
   const seedUuid = legacySlug ? legacySeedSlugToUuid(legacySlug) : null;
   if (seedUuid) {
-    redirect(`/${params.lang}/projects/${seedUuid}`);
+    redirect(`/${resolvedParams.lang}/projects/${seedUuid}`);
   }
 
-  const segment = resolveProjectKeySegment(params.projectId);
+  const segment = resolveProjectKeySegment(resolvedParams.projectId);
   if (!segment) {
     notFound();
   }
 
-  const projectEntries = getPageContent(params.lang, "project", segment);
+  const projectEntries = getPageContent(resolvedParams.lang, "project", segment);
   if (!projectEntries) {
     notFound();
   }
 
   return (
-    <ProjectPageView lang={params.lang} projectId={segment} />
+    <ProjectPageView lang={resolvedParams.lang} projectId={segment} />
   );
 }

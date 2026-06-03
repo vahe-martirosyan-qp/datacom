@@ -9,28 +9,29 @@ import {
 } from "@/lib/server/contentStore";
 
 interface Props {
-  params: { lang: string; slug: string };
+  params: Promise<{ lang: string; slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     return {};
   }
 
-  const blogSlug = resolveBlogKeySegment(params.slug);
+  const blogSlug = resolveBlogKeySegment(resolvedParams.slug);
   if (!blogSlug) {
     return {};
   }
 
-  const homeEntries = getPageContent(params.lang, "home");
+  const homeEntries = getPageContent(resolvedParams.lang, "home");
   const homeMap = homeEntries ? entriesToMap(homeEntries) : {};
   const siteName =
     (homeMap["home.seo.title"] ?? "Datacom").split(/[—–-]/)[0]?.trim() ??
     "Datacom";
 
-  const entries = getPageContent(params.lang, "blogPost", blogSlug);
+  const entries = getPageContent(resolvedParams.lang, "blogPost", blogSlug);
   if (!entries) {
     return { title: siteName };
   }
@@ -44,21 +45,22 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SiteBlogPostPage({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
 
-  const blogSlug = resolveBlogKeySegment(params.slug);
+  const blogSlug = resolveBlogKeySegment(resolvedParams.slug);
   if (!blogSlug) {
     notFound();
   }
 
-  const entries = getPageContent(params.lang, "blogPost", blogSlug);
+  const entries = getPageContent(resolvedParams.lang, "blogPost", blogSlug);
   if (!entries) {
     notFound();
   }
 
-  return <BlogPostPageView lang={params.lang} blogSlug={blogSlug} />;
+  return <BlogPostPageView lang={resolvedParams.lang} blogSlug={blogSlug} />;
 }

@@ -12,7 +12,7 @@ interface PutBody {
 
 export async function PUT(
   request: Request,
-  context: { params: { slug: string[] } }
+  context: { params: Promise<{ slug: string[] }> }
 ) {
   try {
     await assertAdminSession();
@@ -20,7 +20,8 @@ export async function PUT(
     return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
   }
 
-  const key = context.params.slug.join(".");
+  const { slug } = await context.params;
+  const key = slug.join(".");
 
   let body: PutBody;
   try {

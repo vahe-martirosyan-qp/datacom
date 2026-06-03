@@ -4,13 +4,14 @@ import {
   getLanguages,
 } from "@/lib/server/contentStore";
 interface Props {
-  params: { lang: string; slug: string[] };
+  params: Promise<{ lang: string; slug: string[] }>;
 }
 
 export async function generateMetadata({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     return {};
   }
   return { title: "Page not found" };
@@ -20,12 +21,13 @@ export async function generateMetadata({ params }: Props) {
  * Catch-all for URLs without a dedicated route. Returns 404 — no placeholder pages.
  */
 export default async function SiteCatchAllPage({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
-  if (!params.slug?.length) {
+  if (!resolvedParams.slug?.length) {
     notFound();
   }
 

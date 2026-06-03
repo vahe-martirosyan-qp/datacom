@@ -158,23 +158,7 @@
   }
 
   &__body {
-    font-size: var(--text-base);
-    line-height: 1.65;
-    color: var(--color-text);
-
-    :global(p) {
-      margin: 0 0 0.85em;
-    }
-
-    :global(h2) {
-      margin: 1.25em 0 0.5em;
-      font-size: var(--text-xl);
-      font-weight: 700;
-    }
-
-    :global(a) {
-      color: var(--color-link);
-    }
+    @include mixins.page-content-prose;
   }
 
   &__specs {

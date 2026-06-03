@@ -32,10 +32,17 @@ export function buildEquipmentCategoryAdminSections(
       keys: [`${p}.highlights`],
     },
     {
-      id: "body",
-      title: "Основной текст (TipTap)",
+      id: "features",
+      title: "Секции с подзаголовками и чипами",
       description:
-        "Секции с заголовками, абзацами и списками — середина страницы",
+        "Блоки как «Широкая линейка…»: заголовок H2, пункты слева, изображение справа, подзаголовки и строки с «+». Пустой список — блок скрыт.",
+      keys: [`${p}.featureSections`],
+    },
+    {
+      id: "body",
+      title: "Текст бренда / доп. блок (TipTap)",
+      description:
+        "Например блок «Электронные замки Omnitec» с абзацами — после секций с чипами",
       keys: [`${p}.bodyHtml`],
     },
     {

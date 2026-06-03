@@ -11,6 +11,10 @@ export const queryKeys = {
   contentBlogPost: (lang: string, blogSlug: string) =>
     ["content", "blogPost", lang, blogSlug] as const,
   contentEquipment: (lang: string) => ["content", "equipment", lang] as const,
+  contentIntegrations: (lang: string) =>
+    ["content", "integrations", lang] as const,
+  contentIntegrationCategory: (lang: string, categorySlug: string) =>
+    ["content", "integrationCategory", lang, categorySlug] as const,
   contentEquipmentCategory: (lang: string, categorySlug: string) =>
     ["content", "equipmentCategory", lang, categorySlug] as const,
   contentEquipmentProduct: (

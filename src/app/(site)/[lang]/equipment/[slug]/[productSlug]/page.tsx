@@ -13,30 +13,31 @@ import {
   getPageContent,
 } from "@/lib/server/contentStore";
 interface Props {
-  params: { lang: string; slug: string; productSlug: string };
+  params: Promise<{ lang: string; slug: string; productSlug: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     return {};
   }
 
-  const categorySlug = resolveEquipmentCategorySlug(params.slug);
-  const productSlug = resolveEquipmentProductSlug(params.productSlug);
+  const categorySlug = resolveEquipmentCategorySlug(resolvedParams.slug);
+  const productSlug = resolveEquipmentProductSlug(resolvedParams.productSlug);
   if (!categorySlug || !productSlug) {
     return {};
   }
 
-  const homeEntries = getPageContent(params.lang, "home");
+  const homeEntries = getPageContent(resolvedParams.lang, "home");
   const homeMap = homeEntries ? entriesToMap(homeEntries) : {};
   const siteName =
     (homeMap["home.seo.title"] ?? "Datacom").split(/[—–-]/)[0]?.trim() ??
     "Datacom";
 
   const entries = getPageContent(
-    params.lang,
+    resolvedParams.lang,
     "equipmentProduct",
     `${categorySlug}/${productSlug}`
   );
@@ -58,14 +59,15 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SiteEquipmentProductPage({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
 
-  const categorySlug = resolveEquipmentCategorySlug(params.slug);
-  const productSlug = resolveEquipmentProductSlug(params.productSlug);
+  const categorySlug = resolveEquipmentCategorySlug(resolvedParams.slug);
+  const productSlug = resolveEquipmentProductSlug(resolvedParams.productSlug);
   if (!categorySlug || !productSlug) {
     notFound();
   }
@@ -76,7 +78,7 @@ export default async function SiteEquipmentProductPage({ params }: Props) {
 
   return (
     <EquipmentProductPageView
-      lang={params.lang}
+      lang={resolvedParams.lang}
       categorySlug={categorySlug}
       productSlug={productSlug}
     />

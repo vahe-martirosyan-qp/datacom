@@ -8,7 +8,7 @@ import {
 import { COOKIE_ACCESS, COOKIE_REFRESH } from "@/lib/cookieNames";
 
 export async function POST() {
-  const refresh = cookies().get(COOKIE_REFRESH)?.value;
+  const refresh = (await cookies()).get(COOKIE_REFRESH)?.value;
   if (!refresh) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

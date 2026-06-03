@@ -28,6 +28,8 @@ export interface SpotlightCard {
   title: string;
   desc: string;
   href: string;
+  /** Optional illustration (e.g. integrations hub cards). */
+  imageUrl?: string;
 }
 
 export interface BlogTeaserPost {
@@ -87,6 +89,23 @@ export interface ContactOfficeItem {
 export interface EquipmentSpecItem {
   title: string;
   desc: string;
+}
+
+/** Sub-block under a feature section title (`equipment.{slug}.featureSections`). */
+export interface EquipmentFeatureGroup {
+  subtitle: string;
+  /** Lines shown with «+» (chip style). */
+  chips: string[];
+  /** Plain lines below chips (no «+»). */
+  lines: string[];
+}
+
+/** Mid-page block with H2 + grouped chips (`equipment.{slug}.featureSections`). */
+export interface EquipmentFeatureSection {
+  title: string;
+  /** Illustration beside the points (right column on desktop). */
+  imageUrl?: string;
+  groups: EquipmentFeatureGroup[];
 }
 
 /** Gallery image on equipment product pages (`equipment.product.*.*.images`). */

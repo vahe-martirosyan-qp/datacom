@@ -8,16 +8,17 @@ import {
 } from "@/lib/server/contentStore";
 
 interface Props {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     return {};
   }
-  const entries = getPageContent(params.lang, "privacy");
+  const entries = getPageContent(resolvedParams.lang, "privacy");
   const map = entries ? entriesToMap(entries) : {};
   const title =
     map["page.privacy.seo.title"]?.trim() ||
@@ -31,16 +32,17 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SitePrivacyPolicyPage({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
 
-  const entries = getPageContent(params.lang, "privacy");
+  const entries = getPageContent(resolvedParams.lang, "privacy");
   if (!entries) {
     notFound();
   }
 
-  return <PrivacyPageView lang={params.lang} />;
+  return <PrivacyPageView lang={resolvedParams.lang} />;
 }

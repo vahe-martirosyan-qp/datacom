@@ -11,6 +11,7 @@ const SOURCE_LABELS: Record<LeadFormSource, string> = {
   company: "Company page",
   "equipment-category": "Equipment category",
   "equipment-product-modal": "Equipment product (quote modal)",
+  "integration-category": "Integration category",
 };
 
 export interface LeadEmailPayload {

@@ -7,7 +7,7 @@ import {
 
 export async function DELETE(
   _request: Request,
-  context: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
     await assertAdminSession();
@@ -15,7 +15,8 @@ export async function DELETE(
     return NextResponse.json({ error: "Нет доступа" }, { status: 401 });
   }
 
-  const slug = context.params.slug?.trim();
+  const { slug: slugRaw } = await context.params;
+  const slug = slugRaw?.trim();
   if (!slug) {
     return NextResponse.json({ error: "Укажите slug." }, { status: 400 });
   }

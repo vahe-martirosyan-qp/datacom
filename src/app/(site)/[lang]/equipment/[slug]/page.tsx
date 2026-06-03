@@ -9,29 +9,30 @@ import {
 } from "@/lib/server/contentStore";
 
 interface Props {
-  params: { lang: string; slug: string };
+  params: Promise<{ lang: string; slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     return {};
   }
 
-  const categorySlug = resolveEquipmentCategorySlug(params.slug);
+  const categorySlug = resolveEquipmentCategorySlug(resolvedParams.slug);
   if (!categorySlug) {
     return {};
   }
 
-  const homeEntries = getPageContent(params.lang, "home");
+  const homeEntries = getPageContent(resolvedParams.lang, "home");
   const homeMap = homeEntries ? entriesToMap(homeEntries) : {};
   const siteName =
     (homeMap["home.seo.title"] ?? "Datacom").split(/[—–-]/)[0]?.trim() ??
     "Datacom";
 
   const entries = getPageContent(
-    params.lang,
+    resolvedParams.lang,
     "equipmentCategory",
     categorySlug
   );
@@ -53,19 +54,20 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SiteEquipmentCategoryPage({ params }: Props) {
+  const resolvedParams = await params;
   await ensureContentStoreHydrated();
   const codes = getLanguages().map((l) => l.code);
-  if (!codes.includes(params.lang)) {
+  if (!codes.includes(resolvedParams.lang)) {
     notFound();
   }
 
-  const categorySlug = resolveEquipmentCategorySlug(params.slug);
+  const categorySlug = resolveEquipmentCategorySlug(resolvedParams.slug);
   if (!categorySlug) {
     notFound();
   }
 
   const entries = getPageContent(
-    params.lang,
+    resolvedParams.lang,
     "equipmentCategory",
     categorySlug
   );
@@ -74,6 +76,6 @@ export default async function SiteEquipmentCategoryPage({ params }: Props) {
   }
 
   return (
-    <EquipmentCategoryPageView lang={params.lang} categorySlug={categorySlug} />
+    <EquipmentCategoryPageView lang={resolvedParams.lang} categorySlug={categorySlug} />
   );
 }
