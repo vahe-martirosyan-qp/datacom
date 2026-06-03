@@ -12,6 +12,16 @@ const nextConfig = {
         hostname: "*.public.blob.vercel-storage.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "static.tildacdn.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "optim.tildacdn.com",
+        pathname: "/**",
+      },
     ],
   },
 };

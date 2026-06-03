@@ -17,7 +17,7 @@
 
   &__title {
     margin: 0 0 var(--space-3);
-    font-size: var(--text-2xl);
+    font-size: var(--text-section-title);
     font-weight: 700;
     color: var(--color-text);
     letter-spacing: -0.02em;
@@ -73,7 +73,7 @@
       transform var(--t-normal) var(--ease-out);
 
     &:hover {
-      border-color: rgba(255, 106, 0, 0.35);
+      border-color: var(--color-accent-35);
       box-shadow: var(--shadow-soft);
       transform: translateY(-4px);
     }
@@ -120,11 +120,4 @@
     }
   }
 
-  &__ctaArrow {
-    transition: transform var(--t-fast) var(--ease-out);
-  }
-
-  &__cta:hover &__ctaArrow {
-    transform: translateX(4px);
-  }
 }

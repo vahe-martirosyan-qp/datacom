@@ -35,22 +35,24 @@ export function SiteSubPageView({ lang, slug }: SiteSubPageViewProps) {
       isLoading={isLoading}
       loadError={contentQuery.isError}
     >
-      <main className={styles.siteSubPage}>
-        <div className={styles.siteSubPage__inner}>
-          <nav className={styles.siteSubPage__crumb} aria-label="Breadcrumb">
-            <Link href={`/${lang}`} className={styles.siteSubPage__crumbLink}>
-              {homeLabel}
-            </Link>
-            <span aria-hidden> / </span>
-            <span>{heading}</span>
-          </nav>
-          <h1 className={styles.siteSubPage__title}>{heading}</h1>
-          <p className={styles.siteSubPage__lead}>
-            This page is a placeholder. Replace with CMS-driven content or a
-            dedicated route when you build out this section.
-          </p>
-        </div>
-      </main>
+      <div className={styles.siteSubPage}>
+        <header className={styles.siteSubPage__hero}>
+          <div className={styles.siteSubPage__heroInner}>
+            <nav className={styles.siteSubPage__crumb} aria-label="Breadcrumb">
+              <Link href={`/${lang}`} className={styles.siteSubPage__crumbLink}>
+                {homeLabel}
+              </Link>
+              <span aria-hidden> / </span>
+              <span>{heading}</span>
+            </nav>
+            <h1 className={styles.siteSubPage__title}>{heading}</h1>
+            <p className={styles.siteSubPage__lead}>
+              This page is a placeholder. Replace with CMS-driven content or a
+              dedicated route when you build out this section.
+            </p>
+          </div>
+        </header>
+      </div>
     </SiteChrome>
   );
 }

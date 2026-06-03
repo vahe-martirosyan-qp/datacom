@@ -37,13 +37,32 @@ function normalizeProjectsNavHref(href: string): string {
   return href ?? "";
 }
 
+/** Legacy homepage anchors → dedicated routes. */
+function normalizeNavHref(href: string): string {
+  const t = (href ?? "").trim();
+  const legacy: Record<string, string> = {
+    "#equipment": "equipment",
+    "#integrations": "integrations",
+    "#about": "company",
+    "#blog": "blog",
+    "#contacts": "contacts",
+    "#projects": "projects",
+  };
+  if (legacy[t]) {
+    return legacy[t];
+  }
+  return normalizeProjectsNavHref(href);
+}
+
 function normalizeNavMegaItems(items: NavMegaItem[]): NavMegaItem[] {
   return items.map((item) => ({
     ...item,
-    href: normalizeProjectsNavHref(item.href),
+    href: normalizeNavHref(item.href),
     children: item.children?.map((c) => ({
       ...c,
-      href: normalizeProjectsNavHref(c.href),
+      href: normalizeNavHref(c.href),
+      desc: c.desc?.trim() || undefined,
+      imageUrl: c.imageUrl?.trim() || undefined,
     })),
   }));
 }
@@ -66,5 +85,10 @@ export function parseNavMegaMenu(map: Record<string, string>): NavMegaItem[] {
     }
   }
   const flat = parseJsonArray<NavItem>(map["home.nav.items"] ?? "[]", []);
-  return normalizeNavMegaItems(flat.map((item) => ({ ...item })));
+  return normalizeNavMegaItems(
+    flat.map((item) => ({
+      ...item,
+      href: normalizeNavHref(item.href),
+    }))
+  );
 }

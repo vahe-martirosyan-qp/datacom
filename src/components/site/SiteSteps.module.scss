@@ -11,7 +11,7 @@
 
   &__title {
     margin: 0 0 var(--space-10);
-    font-size: var(--text-3xl);
+    font-size: var(--text-section-title);
     font-weight: 700;
     text-align: center;
   }
@@ -45,8 +45,7 @@
     margin-bottom: var(--space-4);
     font-size: var(--text-sm);
     font-weight: 700;
-    color: var(--color-bg-deep);
-    background: var(--color-accent);
+    @include mixins.button-primary;
     border-radius: 50%;
   }
 

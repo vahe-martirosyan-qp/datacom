@@ -3,7 +3,7 @@
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import styles from "./TiptapRichTextEditor.module.scss";
 
 export interface TiptapRichTextEditorProps {
@@ -23,34 +23,44 @@ export function TiptapRichTextEditor({
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
-  const editor = useEditor(
-    {
-      immediatelyRender: false,
-      extensions: [
-        StarterKit.configure({
-          heading: { levels: [2, 3] },
-          link: {
-            openOnClick: false,
-          },
-        }),
-        Placeholder.configure({ placeholder }),
-      ],
-      content: value || "",
-      editorProps: {
-        attributes: {
-          class: styles.tiptapRichTextEditor__prose,
-          ...(id ? { id } : {}),
+  const extensions = useMemo(
+    () => [
+      StarterKit.configure({
+        heading: { levels: [2, 3] },
+        link: {
+          openOnClick: false,
         },
-      },
-      onUpdate: ({ editor: ed }) => {
-        onChangeRef.current(ed.getHTML());
-      },
-    },
+      }),
+      Placeholder.configure({ placeholder }),
+    ],
     [placeholder]
   );
 
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions,
+    content: value || "",
+    editorProps: {
+      attributes: {
+        class: styles.tiptapRichTextEditor__prose,
+        ...(id ? { id } : {}),
+      },
+    },
+    onUpdate: ({ editor: ed }) => {
+      onChangeRef.current(ed.getHTML());
+    },
+  });
+
   useEffect(() => {
-    if (!editor) return;
+    return () => {
+      if (editor && !editor.isDestroyed) {
+        editor.destroy();
+      }
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
     const next = value || "";
     if (next === editor.getHTML()) return;
     editor.commands.setContent(next, { emitUpdate: false });

@@ -42,14 +42,15 @@ export function loadPersistedContentInto(
     }
     for (const [code, bucket] of Object.entries(data)) {
       if (isContentBucket(bucket)) {
-        const normalized: Record<string, ContentEntry> = {};
+        if (!byLang[code]) {
+          byLang[code] = {};
+        }
         for (const [k, e] of Object.entries(bucket)) {
-          normalized[k] = {
+          byLang[code][k] = {
             ...e,
             type: e.type ?? "text",
           };
         }
-        byLang[code] = normalized;
       }
     }
   } catch {

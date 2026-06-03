@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import type { HomeContentResponse } from "@/types";
 
-async function fetchHomeContent(lang: string): Promise<HomeContentResponse> {
+export async function fetchHomeContent(lang: string): Promise<HomeContentResponse> {
   const { data } = await api.get<HomeContentResponse>("/content", {
     params: { lang, page: "home" },
   });

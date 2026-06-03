@@ -7,7 +7,7 @@
     135deg,
     var(--color-bg-deep) 0%,
     var(--color-bg-panel) 50%,
-    #0f1724 100%
+    var(--color-bg-contact-stop) 100%
   );
   color: var(--color-text-inverse);
   overflow: hidden;
@@ -18,7 +18,7 @@
     inset: 0;
     background: radial-gradient(
       ellipse 80% 60% at 70% 40%,
-      rgba(255, 106, 0, 0.12) 0%,
+      var(--color-accent-12) 0%,
       transparent 55%
     );
     pointer-events: none;
@@ -35,7 +35,7 @@
 
   &__title {
     margin: 0 0 var(--space-4);
-    font-size: var(--text-2xl);
+    font-size: var(--text-section-title);
     font-weight: 700;
     line-height: 1.25;
     animation: contactStripIn 0.7s var(--ease-out) both;
@@ -51,7 +51,7 @@
   &__phone {
     display: inline-block;
     margin-bottom: var(--space-4);
-    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-size: var(--text-promo);
     font-weight: 800;
     letter-spacing: 0.04em;
     color: var(--color-text-inverse);
@@ -73,19 +73,15 @@
     padding: var(--space-3) var(--space-8);
     font-size: var(--text-sm);
     font-weight: 600;
-    color: var(--color-bg-deep);
-    background: var(--color-accent);
+    @include mixins.button-primary;
     border-radius: var(--radius-md);
     text-decoration: none;
     transition: background var(--t-fast) var(--ease-out),
-      transform var(--t-fast) var(--ease-out),
       box-shadow var(--t-fast) var(--ease-out);
     animation: contactStripIn 0.7s var(--ease-out) 0.2s both;
 
     &:hover {
-      background: var(--color-accent-hover);
-      transform: translateY(-3px);
-      box-shadow: 0 14px 32px rgba(255, 106, 0, 0.4);
+      box-shadow: var(--shadow-cta-md);
     }
   }
 }

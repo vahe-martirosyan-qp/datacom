@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
+import {
+  COOKIE_CONSENT_EVENT,
+  hasCookieConsentChoice,
+  requestOpenCookieSettings,
+} from "@/lib/cookieConsent";
+import { parseCookieConsentCopy } from "@/lib/cookieConsentCopy";
 import { parseJsonArray } from "@/lib/contentUtils";
 import type { FooterColumn, NavItem } from "@/types/site";
 import styles from "./SiteFooter.module.scss";
@@ -27,6 +34,15 @@ function isExternal(href: string): boolean {
 }
 
 export function SiteFooter({ lang, map, isLoading }: SiteFooterProps) {
+  const [consentChosen, setConsentChosen] = useState(false);
+
+  useEffect(() => {
+    setConsentChosen(hasCookieConsentChoice());
+    const onConsent = () => setConsentChosen(true);
+    window.addEventListener(COOKIE_CONSENT_EVENT, onConsent);
+    return () => window.removeEventListener(COOKIE_CONSENT_EVENT, onConsent);
+  }, []);
+
   const brand = map["home.header.logoText"] ?? "Datacom";
   const tagline = map["home.footer.tagline"] ?? "";
   const phone = map["home.footer.phone"] ?? "";
@@ -34,6 +50,7 @@ export function SiteFooter({ lang, map, isLoading }: SiteFooterProps) {
   const email = map["home.footer.email"] ?? "";
   const emailNote = map["home.footer.emailNote"] ?? "";
   const copyright = map["home.footer.copyright"] ?? "";
+  const cookieCopy = parseCookieConsentCopy(map, lang);
   const columns = parseJsonArray<FooterColumn>(
     map["home.footer.columns"] ?? "[]",
     []
@@ -113,7 +130,18 @@ export function SiteFooter({ lang, map, isLoading }: SiteFooterProps) {
           ))}
         </div>
 
-        <div className={styles.siteFooter__bottom}>{copyright}</div>
+        <div className={styles.siteFooter__bottom}>
+          <span className={styles.siteFooter__copyright}>{copyright}</span>
+          {consentChosen && cookieCopy?.manageLabel ? (
+            <button
+              type="button"
+              className={styles.siteFooter__cookieSettings}
+              onClick={requestOpenCookieSettings}
+            >
+              {cookieCopy.manageLabel}
+            </button>
+          ) : null}
+        </div>
       </div>
     </footer>
   );

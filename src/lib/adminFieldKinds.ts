@@ -13,7 +13,13 @@ export type AdminFieldKind =
   | "brandList"
   | "footerColumns"
   | "tiptap"
-  | "imageUpload";
+  | "imageUpload"
+  | "companyStats"
+  | "contactOffices"
+  | "equipmentHighlights"
+  | "equipmentProducts"
+  | "equipmentSpecs"
+  | "equipmentProductImages";
 
 const KIND_BY_KEY: Record<string, AdminFieldKind> = {
   "home.nav.megaMenu": "navMega",
@@ -22,6 +28,7 @@ const KIND_BY_KEY: Record<string, AdminFieldKind> = {
   "projects.list": "projectCards",
   "home.spotlight.items": "spotlightCards",
   "home.blog.posts": "blogPosts",
+  "page.blog.posts": "blogPosts",
   "home.steps.items": "stepItems",
   "home.clients.brands": "brandList",
   "home.footer.columns": "footerColumns",
@@ -29,9 +36,30 @@ const KIND_BY_KEY: Record<string, AdminFieldKind> = {
   "home.hero.subtitle": "textarea",
   "home.about.body": "textarea",
   "home.lead.subtitle": "textarea",
+  "global.cookies.message": "textarea",
+  "global.cookies.settingsIntro": "textarea",
+  "global.cookies.essentialDesc": "textarea",
+  "global.cookies.analyticsDesc": "textarea",
+  "global.cookies.marketingDesc": "textarea",
+  "global.cookies.privacyHref": "url",
   "home.hero.imageUrl": "url",
   "home.about.imageUrl": "url",
   "home.about.pdfHref": "url",
+  "page.company.stats": "companyStats",
+  "page.company.heroImageUrl": "imageUpload",
+  "page.company.seo.description": "textarea",
+  "page.company.intro": "textarea",
+  "page.company.pdfHref": "url",
+  "page.contacts.offices": "contactOffices",
+  "page.contacts.seo.description": "textarea",
+  "page.contacts.formSubtitle": "textarea",
+  "page.privacy.seo.description": "textarea",
+  "page.privacy.intro": "textarea",
+  "page.privacy.bodyHtml": "tiptap",
+  "page.blog.seo.description": "textarea",
+  "page.blog.subtitle": "textarea",
+  "page.equipment.seo.description": "textarea",
+  "page.equipment.subtitle": "textarea",
 };
 
 export function getAdminFieldKind(key: string): AdminFieldKind {
@@ -39,14 +67,32 @@ export function getAdminFieldKind(key: string): AdminFieldKind {
   if (mapped) {
     return mapped;
   }
+  if (/^equipment\.product\.[^.]+\.[^.]+\.images$/.test(key)) {
+    return "equipmentProductImages";
+  }
   if (key.endsWith(".bodyHtml")) {
     return "tiptap";
+  }
+  if (key.endsWith(".highlights")) {
+    return "equipmentHighlights";
+  }
+  if (key.endsWith(".products")) {
+    return "equipmentProducts";
+  }
+  if (key.endsWith(".specs")) {
+    return "equipmentSpecs";
   }
   if (key.endsWith(".equipment")) {
     return "textarea";
   }
   if (key.endsWith(".heroImage")) {
     return "imageUpload";
+  }
+  if (key.match(/^equipment\.[^.]+\.seo\.description$/)) {
+    return "textarea";
+  }
+  if (key.endsWith(".subtitle")) {
+    return "textarea";
   }
   return "text";
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { buildLocalizedHref, parseJsonArray } from "@/lib/contentUtils";
 import type { BlogTeaserPost } from "@/types/site";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { SiteBlogPostCard } from "./SiteBlogPostCard";
 import styles from "./SiteBlogTeaser.module.scss";
 
 interface SiteBlogTeaserProps {
@@ -57,22 +58,7 @@ export function SiteBlogTeaser({
           <ul className={styles.siteBlogTeaser__list}>
             {posts.map((post) => (
               <li key={post.title + post.href}>
-                <Link
-                  href={buildLocalizedHref(lang, post.href)}
-                  className={styles.siteBlogTeaser__card}
-                >
-                  {post.meta ? (
-                    <span className={styles.siteBlogTeaser__meta}>
-                      {post.meta}
-                    </span>
-                  ) : null}
-                  <span className={styles.siteBlogTeaser__cardTitle}>
-                    {post.title}
-                  </span>
-                  <span className={styles.siteBlogTeaser__cardArrow} aria-hidden>
-                    →
-                  </span>
-                </Link>
+                <SiteBlogPostCard lang={lang} post={post} variant="teaser" />
               </li>
             ))}
           </ul>

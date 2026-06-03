@@ -64,7 +64,8 @@
     pointer-events: none;
   }
 
-  &__uploadBtn {
+  &__uploadBtn,
+  &__cropBtn {
     flex-shrink: 0;
     padding: var(--space-2) var(--space-4);
     font-size: var(--text-xs);
@@ -88,9 +89,14 @@
     }
   }
 
+  &__cropBtn {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
   &__error {
     margin: 0;
     font-size: var(--text-xs);
-    color: #b91c1c;
+    color: var(--color-error);
   }
 }

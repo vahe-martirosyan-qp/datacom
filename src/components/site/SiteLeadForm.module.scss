@@ -10,9 +10,17 @@
     margin-inline: auto;
   }
 
+  &--section &__form {
+    padding: var(--space-8);
+    background: var(--color-surface-alt);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-dark);
+    box-shadow: var(--shadow-soft);
+  }
+
   &__title {
     margin: 0 0 var(--space-3);
-    font-size: var(--text-xl);
+    font-size: var(--text-section-title);
     font-weight: 700;
     text-align: center;
     color: var(--color-text);
@@ -27,12 +35,30 @@
     color: var(--color-text-muted);
   }
 
+  &__honeypot {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
   &__form {
-    padding: var(--space-8);
-    background: var(--color-surface-alt);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border-dark);
-    box-shadow: var(--shadow-soft);
+    position: relative;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  &__error {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+    color: var(--color-error);
+    text-align: center;
   }
 
   &__field {
@@ -98,17 +124,15 @@
     padding: var(--space-3);
     font-size: var(--text-base);
     font-weight: 600;
-    color: var(--color-bg-deep);
-    background: var(--color-accent);
+    @include mixins.button-primary;
     border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background var(--t-fast) var(--ease-out),
-      transform var(--t-fast) var(--ease-out);
+    transition: background var(--t-fast) var(--ease-out);
 
-    &:hover {
-      background: var(--color-accent-hover);
-      transform: translateY(-2px);
+    &:disabled {
+      opacity: 0.7;
+      cursor: wait;
     }
   }
 
@@ -126,8 +150,8 @@
     font-size: var(--text-sm);
     font-weight: 600;
     text-align: center;
-    color: #15803d;
-    background: rgba(21, 128, 61, 0.1);
+    color: var(--color-success);
+    background: var(--color-success-10);
     border-radius: var(--radius-md);
   }
 }

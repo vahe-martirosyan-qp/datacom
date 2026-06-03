@@ -17,12 +17,6 @@ export function SiteStatsRow({ map, isLoading }: SiteStatsRowProps) {
       desc: map["home.stats.equipmentDesc"],
     },
     {
-      id: "hoteza",
-      count: map["home.stats.hotezaCount"],
-      label: map["home.stats.hotezaTitle"],
-      desc: map["home.stats.hotezaDesc"],
-    },
-    {
       id: "integrations",
       count: map["home.stats.integrationCount"],
       label: map["home.stats.integrationTitle"],
@@ -34,7 +28,7 @@ export function SiteStatsRow({ map, isLoading }: SiteStatsRowProps) {
     return (
       <section className={styles.siteStatsRow} aria-busy="true">
         <div className={styles.siteStatsRow__inner}>
-          {[0, 1, 2].map((i) => (
+          {[0, 1].map((i) => (
             <div key={i} className={styles.siteStatsRow__card}>
               <Skeleton variant="title" />
               <Skeleton variant="text" />

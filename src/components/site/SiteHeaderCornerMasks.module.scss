@@ -1,0 +1,42 @@
+@use "@/styles/mixins.scss" as mixins;
+
+.siteHeaderCornerMasks {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: 0;
+  z-index: 1999;
+  pointer-events: none;
+
+  &__svg {
+    position: absolute;
+    top: calc(-1 * (var(--header-h) + 4px));
+    width: var(--header-corner-w);
+    height: var(--header-corner-h);
+    display: block;
+    color: var(--color-bg-header);
+
+    &--start {
+      left: 0;
+    }
+
+    &--end {
+      right: 0;
+    }
+
+    @media (min-width: 480px) {
+      --header-corner-w: 28px;
+      --header-corner-h: 72px;
+    }
+
+    @include mixins.bp-md {
+      --header-corner-w: 32px;
+      --header-corner-h: 96px;
+    }
+
+    @include mixins.bp-lg {
+      --header-corner-w: 40px;
+      --header-corner-h: 120px;
+    }
+  }
+}

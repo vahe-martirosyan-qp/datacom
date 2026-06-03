@@ -58,19 +58,34 @@ export function SiteProjectsIndexView({ lang }: SiteProjectsIndexViewProps) {
       isLoading={isLoading}
       loadError={contentQuery.isError}
     >
-      <main className={styles.siteProjectsIndex}>
-        <div className={styles.siteProjectsIndex__inner}>
-          <nav className={styles.siteProjectsIndex__crumb} aria-label="Breadcrumb">
-            <Link href={`/${lang}`} className={styles.siteProjectsIndex__crumbLink}>
-              {homeLabel}
-            </Link>
-            <span aria-hidden> / </span>
-            <span>{title}</span>
-          </nav>
+      <div className={styles.siteProjectsIndex}>
+        <header className={styles.siteProjectsIndex__hero}>
+          <div className={styles.siteProjectsIndex__heroInner}>
+            <nav
+              className={styles.siteProjectsIndex__crumb}
+              aria-label="Breadcrumb"
+            >
+              <Link
+                href={`/${lang}`}
+                className={styles.siteProjectsIndex__crumbLink}
+              >
+                {homeLabel}
+              </Link>
+              <span aria-hidden> / </span>
+              <span>{title}</span>
+            </nav>
+            {isLoading ? (
+              <Skeleton variant="title" />
+            ) : (
+              <h1 className={styles.siteProjectsIndex__title}>{title}</h1>
+            )}
+          </div>
+        </header>
 
+        <div className={styles.siteProjectsIndex__body}>
+          <div className={styles.siteProjectsIndex__bodyInner}>
           {isLoading ? (
             <>
-              <Skeleton variant="title" />
               <div className={styles.siteProjectsIndex__skeletonGrid}>
                 {[0, 1, 2].map((i) => (
                   <div key={i} className={styles.siteProjectsIndex__skeletonCard}>
@@ -82,7 +97,6 @@ export function SiteProjectsIndexView({ lang }: SiteProjectsIndexViewProps) {
             </>
           ) : (
             <>
-              <h1 className={styles.siteProjectsIndex__title}>{title}</h1>
               {items.length > 0 ? (
                 <>
                   <div className={styles.siteProjectsIndex__grid}>
@@ -119,8 +133,9 @@ export function SiteProjectsIndexView({ lang }: SiteProjectsIndexViewProps) {
               )}
             </>
           )}
+          </div>
         </div>
-      </main>
+      </div>
     </SiteChrome>
   );
 }

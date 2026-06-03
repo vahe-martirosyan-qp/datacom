@@ -1,6 +1,9 @@
 @use "@/styles/mixins.scss" as mixins;
 
 .siteStatsRow {
+  transform: translateY(-54px);
+  border-radius: var(--site-shell-radius) var(--site-shell-radius) 0 0;
+  overflow: hidden;
   background: linear-gradient(
     180deg,
     var(--color-bg-elevated) 0%,
@@ -16,7 +19,7 @@
     padding-block: var(--space-12);
 
     @include mixins.bp-md {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: var(--space-8);
     }
   }
@@ -33,9 +36,9 @@
 
     &:hover {
       transform: translateY(-6px);
-      border-color: rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.04);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      border-color: var(--color-on-inverse-12);
+      background: var(--color-on-inverse-04);
+      box-shadow: var(--shadow-stats-hover);
     }
   }
 

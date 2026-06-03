@@ -1,6 +1,14 @@
 import type { ContentEntry, ContentValueType, Language } from "@/types";
 import { prisma } from "@/lib/server/prisma";
-import type { ProjectCardItem } from "@/types/site";
+import type {
+  BlogTeaserPost,
+  EquipmentProductItem,
+  ProjectCardItem,
+} from "@/types/site";
+import {
+  buildCategoryProductsForDisplay,
+  parseEquipmentCategoryProductCatalog,
+} from "@/lib/equipmentCategoryProductsUtils";
 import {
   canonicalizeProjectCardHref,
   normalizeProjectId,
@@ -11,13 +19,72 @@ import {
 import {
   DEFAULT_NAV_MEGA_MENU_EN,
   DEFAULT_NAV_MEGA_MENU_RU,
+  DEFAULT_NAV_ITEMS_EN,
+  DEFAULT_NAV_ITEMS_RU,
 } from "@/lib/server/defaultNavMegaMenu";
+import { DEFAULT_CLIENT_LOGOS_JSON } from "@/lib/server/defaultClientLogos";
+import { reconcileHomeClientBrandsAcrossLanguages } from "@/lib/server/clientBrandsSync";
+import {
+  removeHotezaFromContentInStore,
+  repairLegacyNavKeysInStore,
+} from "@/lib/server/navHrefRepair";
 import {
   loadPersistedContentInto,
   loadPersistedLanguages,
   savePersistedContent,
   savePersistedLanguages,
 } from "@/lib/server/contentPersistence";
+import {
+  COMPANY_BODY_HTML_EN,
+  COMPANY_BODY_HTML_RU,
+  COMPANY_HERO_IMAGE_URL,
+  COMPANY_STATS_EN,
+  COMPANY_STATS_RU,
+} from "@/lib/server/companyPageSeedContent";
+import {
+  CONTACTS_OFFICES_EN,
+  CONTACTS_OFFICES_RU,
+} from "@/lib/server/contactsPageSeedContent";
+import {
+  BLOG_POSTS_EN,
+  BLOG_POSTS_RU,
+} from "@/lib/server/blogPageSeedContent";
+import {
+  EQUIPMENT_PAGE_SUBTITLE_EN,
+  EQUIPMENT_PAGE_SUBTITLE_RU,
+} from "@/lib/server/equipmentPageSeedContent";
+import { blogPostSeedEntriesForLang } from "@/lib/server/blogPostSeedContent";
+import { equipmentCategorySeedEntriesForLang } from "@/lib/server/equipmentCategorySeedContent";
+import { equipmentProductSeedEntriesForLang } from "@/lib/server/equipmentProductSeedContent";
+import {
+  buildProductCatalogJsonForCategory,
+  collectCategorySlugsFromStore,
+  reconcileEquipmentCategoryProductCards,
+  slugsFromCategoryProductCards,
+} from "@/lib/server/equipmentCategoryProductsSync";
+import {
+  equipmentProductContentPrefix,
+  normalizeEquipmentProductSlug,
+  parseEquipmentProductRouteSlug,
+  resolveEquipmentProductSlug,
+  slugifyEquipmentProductTitle,
+} from "@/lib/equipmentProductHrefUtils";
+import { blogKeySegmentFromCardHref } from "@/lib/blogHrefUtils";
+import {
+  equipmentCategoryHrefFromSlug,
+  equipmentCategorySlugFromNavHref,
+  normalizeEquipmentCategorySlug,
+  slugifyEquipmentCategoryTitle,
+} from "@/lib/equipmentHrefUtils";
+import {
+  findEquipmentMegaItemIndex,
+  parseMegaMenuItems,
+  serializeMegaMenuItems,
+} from "@/lib/equipmentNavUtils";
+import { cookieConsentSeedEntriesForLang } from "@/lib/server/cookieConsentSeedContent";
+import { privacyPageSeedEntriesForLang } from "@/lib/server/privacyPageSeedContent";
+import { reconcileCookieConsentSeeds } from "@/lib/server/cookieConsentSeedSync";
+import { reconcilePrivacyPageSeeds } from "@/lib/server/privacyPageSeedSync";
 import {
   MAIDENS_BODY_HTML_EN,
   MAIDENS_BODY_HTML_RU,
@@ -35,13 +102,13 @@ type LangCode = string;
 const enHome: Record<string, ContentEntry> = {
   "home.seo.title": {
     key: "home.seo.title",
-    value: "Datacom — Hotel solutions: equipment, Hoteza platform, integrations",
+    value: "Datacom — Hotel solutions: equipment and integrations",
     type: "text",
   },
   "home.seo.description": {
     key: "home.seo.description",
     value:
-      "Equipment and systems for hotels of any category: locks, minibars, TV, PBX, Hoteza, integrations across Russia.",
+      "Equipment and systems for hotels of any category: locks, minibars, TV, PBX, integrations across Russia.",
     type: "text",
   },
   "home.header.phone": {
@@ -61,15 +128,7 @@ const enHome: Record<string, ContentEntry> = {
   },
   "home.nav.items": {
     key: "home.nav.items",
-    value: JSON.stringify([
-      { label: "Equipment & systems", href: "#equipment" },
-      { label: "Hoteza platform", href: "#hoteza" },
-      { label: "Integrations", href: "#integrations" },
-      { label: "Company", href: "#about" },
-      { label: "Projects", href: "projects" },
-      { label: "Blog", href: "#blog" },
-      { label: "Contacts", href: "#contacts" },
-    ]),
+    value: DEFAULT_NAV_ITEMS_EN,
     type: "json",
   },
   "home.nav.megaMenu": {
@@ -117,21 +176,6 @@ const enHome: Record<string, ContentEntry> = {
   "home.stats.equipmentDesc": {
     key: "home.stats.equipmentDesc",
     value: "Reliable solutions from leading brands for any property",
-    type: "text",
-  },
-  "home.stats.hotezaTitle": {
-    key: "home.stats.hotezaTitle",
-    value: "Hoteza platform",
-    type: "text",
-  },
-  "home.stats.hotezaCount": {
-    key: "home.stats.hotezaCount",
-    value: "6",
-    type: "text",
-  },
-  "home.stats.hotezaDesc": {
-    key: "home.stats.hotezaDesc",
-    value: "Interactive solutions for perfect in-room guest experience",
     type: "text",
   },
   "home.stats.integrationTitle": {
@@ -240,14 +284,7 @@ const enHome: Record<string, ContentEntry> = {
   },
   "home.clients.brands": {
     key: "home.clients.brands",
-    value: JSON.stringify([
-      "Marriott",
-      "Hilton",
-      "Hyatt",
-      "IHG",
-      "Accor",
-      "Local flagship",
-    ]),
+    value: DEFAULT_CLIENT_LOGOS_JSON,
     type: "json",
   },
   "home.blog.title": {
@@ -267,16 +304,22 @@ const enHome: Record<string, ContentEntry> = {
         title: "Hotel TV trends in 2026",
         href: "blog/hotel-tv-trends",
         meta: "Jan 2026",
+        imageUrl:
+          "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=800&q=80",
       },
       {
         title: "Integrating locks with PMS",
         href: "blog/locks-pms",
         meta: "Guide",
+        imageUrl:
+          "https://images.unsplash.com/photo-1558008280-b9d87398e043?w=800&q=80",
       },
       {
         title: "Case study: flagship opening",
         href: "blog/case-flagship",
         meta: "Projects",
+        imageUrl:
+          "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80",
       },
     ]),
     type: "json",
@@ -474,6 +517,156 @@ const enHome: Record<string, ContentEntry> = {
     value: "2024",
     type: "text",
   },
+  "page.company.seo.title": {
+    key: "page.company.seo.title",
+    value: "Company — Datacom",
+    type: "text",
+  },
+  "page.company.seo.description": {
+    key: "page.company.seo.description",
+    value:
+      "Hotel IT integrator and equipment supplier: room automation, interactive TV, integrations across Russia.",
+    type: "text",
+  },
+  "page.company.title": {
+    key: "page.company.title",
+    value: "Company",
+    type: "text",
+  },
+  "page.company.intro": {
+    key: "page.company.intro",
+    value:
+      "A hotel IT systems integrator and television supplier, and equipment provider for hotels.",
+    type: "text",
+  },
+  "page.company.timelineStart": {
+    key: "page.company.timelineStart",
+    value: "2009",
+    type: "text",
+  },
+  "page.company.timelineEnd": {
+    key: "page.company.timelineEnd",
+    value: "2024",
+    type: "text",
+  },
+  "page.company.stats": {
+    key: "page.company.stats",
+    value: COMPANY_STATS_EN,
+    type: "json",
+  },
+  "page.company.heroImageUrl": {
+    key: "page.company.heroImageUrl",
+    value: COMPANY_HERO_IMAGE_URL,
+    type: "text",
+  },
+  "page.company.bodyHtml": {
+    key: "page.company.bodyHtml",
+    value: COMPANY_BODY_HTML_EN,
+    type: "text",
+  },
+  "page.company.pdfLabel": {
+    key: "page.company.pdfLabel",
+    value: "Corporate brief (PDF)",
+    type: "text",
+  },
+  "page.company.pdfHref": {
+    key: "page.company.pdfHref",
+    value: "https://datacom.example/",
+    type: "text",
+  },
+  "page.company.clientsTitle": {
+    key: "page.company.clientsTitle",
+    value: "Trusted by hundreds of hotels across the country",
+    type: "text",
+  },
+  "page.company.clientsSubtitle": {
+    key: "page.company.clientsSubtitle",
+    value: "Including leading international chains",
+    type: "text",
+  },
+  "page.contacts.seo.title": {
+    key: "page.contacts.seo.title",
+    value: "Contacts — Datacom",
+    type: "text",
+  },
+  "page.contacts.seo.description": {
+    key: "page.contacts.seo.description",
+    value:
+      "Offices in Saint Petersburg and Moscow, technical support hotline, contact form.",
+    type: "text",
+  },
+  "page.contacts.title": {
+    key: "page.contacts.title",
+    value: "Contacts",
+    type: "text",
+  },
+  "page.contacts.offices": {
+    key: "page.contacts.offices",
+    value: CONTACTS_OFFICES_EN,
+    type: "json",
+  },
+  "page.contacts.formTitle": {
+    key: "page.contacts.formTitle",
+    value: "Write to us",
+    type: "text",
+  },
+  "page.contacts.formSubtitle": {
+    key: "page.contacts.formSubtitle",
+    value: "",
+    type: "text",
+  },
+  "page.blog.seo.title": {
+    key: "page.blog.seo.title",
+    value: "News & publications — Datacom",
+    type: "text",
+  },
+  "page.blog.seo.description": {
+    key: "page.blog.seo.description",
+    value:
+      "Industry news, product updates and project stories from the Datacom team.",
+    type: "text",
+  },
+  "page.blog.title": {
+    key: "page.blog.title",
+    value: "News & publications",
+    type: "text",
+  },
+  "page.blog.subtitle": {
+    key: "page.blog.subtitle",
+    value: "",
+    type: "text",
+  },
+  "page.blog.posts": {
+    key: "page.blog.posts",
+    value: BLOG_POSTS_EN,
+    type: "json",
+  },
+  "page.blog.loadMoreLabel": {
+    key: "page.blog.loadMoreLabel",
+    value: "Show more",
+    type: "text",
+  },
+  "page.equipment.seo.title": {
+    key: "page.equipment.seo.title",
+    value: "Equipment & systems — Datacom",
+    type: "text",
+  },
+  "page.equipment.seo.description": {
+    key: "page.equipment.seo.description",
+    value:
+      "Electronic locks, minibars, safes, TV, hotel PBX, room automation, headends and LAN for hotels.",
+    type: "text",
+  },
+  "page.equipment.title": {
+    key: "page.equipment.title",
+    value: "Equipment & systems",
+    type: "text",
+  },
+  "page.equipment.subtitle": {
+    key: "page.equipment.subtitle",
+    value: EQUIPMENT_PAGE_SUBTITLE_EN,
+    type: "text",
+  },
   "home.lead.title": {
     key: "home.lead.title",
     value: "Leave your details and we will get back to you",
@@ -481,7 +674,7 @@ const enHome: Record<string, ContentEntry> = {
   },
   "home.lead.subtitle": {
     key: "home.lead.subtitle",
-    value: "We will contact you to discuss equipment, Hoteza or integrations.",
+    value: "We will contact you to discuss equipment or integrations.",
     type: "text",
   },
   "home.lead.namePh": {
@@ -568,15 +761,6 @@ const enHome: Record<string, ContentEntry> = {
         ],
       },
       {
-        title: "Hoteza",
-        links: [
-          { label: "Hoteza TV", href: "#" },
-          { label: "Guest App", href: "#" },
-          { label: "HSIA", href: "#" },
-          { label: "HotPad", href: "#" },
-        ],
-      },
-      {
         title: "Integrations",
         links: [
           { label: "Design", href: "#" },
@@ -598,13 +782,13 @@ const ruHome: Record<string, ContentEntry> = {
   "home.seo.title": {
     key: "home.seo.title",
     value:
-      "Datacom — Решения для отелей: оборудование, платформа Hoteza, интеграции",
+      "Datacom — Решения для отелей: оборудование и интеграции",
     type: "text",
   },
   "home.seo.description": {
     key: "home.seo.description",
     value:
-      "Оборудование и системы для отелей любой категории: замки, минибары, ТВ, АТС, Hoteza, интеграции.",
+      "Оборудование и системы для отелей любой категории: замки, минибары, ТВ, АТС, интеграции.",
     type: "text",
   },
   "home.header.phone": {
@@ -624,15 +808,7 @@ const ruHome: Record<string, ContentEntry> = {
   },
   "home.nav.items": {
     key: "home.nav.items",
-    value: JSON.stringify([
-      { label: "Оборудование и системы", href: "#equipment" },
-      { label: "Платформа Hoteza", href: "#hoteza" },
-      { label: "Интеграции", href: "#integrations" },
-      { label: "Компания", href: "#about" },
-      { label: "Проекты", href: "projects" },
-      { label: "Блог", href: "#blog" },
-      { label: "Контакты", href: "#contacts" },
-    ]),
+    value: DEFAULT_NAV_ITEMS_RU,
     type: "json",
   },
   "home.nav.megaMenu": {
@@ -681,21 +857,6 @@ const ruHome: Record<string, ContentEntry> = {
   "home.stats.equipmentDesc": {
     key: "home.stats.equipmentDesc",
     value: "Надёжные решения для объектов размещения от ведущих брендов",
-    type: "text",
-  },
-  "home.stats.hotezaTitle": {
-    key: "home.stats.hotezaTitle",
-    value: "Платформа Hoteza",
-    type: "text",
-  },
-  "home.stats.hotezaCount": {
-    key: "home.stats.hotezaCount",
-    value: "6",
-    type: "text",
-  },
-  "home.stats.hotezaDesc": {
-    key: "home.stats.hotezaDesc",
-    value: "Интерактивные решения для идеального гостевого сервиса",
     type: "text",
   },
   "home.stats.integrationTitle": {
@@ -805,14 +966,7 @@ const ruHome: Record<string, ContentEntry> = {
   },
   "home.clients.brands": {
     key: "home.clients.brands",
-    value: JSON.stringify([
-      "Marriott",
-      "Hilton",
-      "Hyatt",
-      "IHG",
-      "Accor",
-      "Флагманы РФ",
-    ]),
+    value: DEFAULT_CLIENT_LOGOS_JSON,
     type: "json",
   },
   "home.blog.title": {
@@ -832,16 +986,22 @@ const ruHome: Record<string, ContentEntry> = {
         title: "Тренды гостиничного ТВ в 2026",
         href: "blog/hotel-tv-trends",
         meta: "Янв 2026",
+        imageUrl:
+          "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=800&q=80",
       },
       {
         title: "Интеграция замков с PMS",
         href: "blog/locks-pms",
         meta: "Гайд",
+        imageUrl:
+          "https://images.unsplash.com/photo-1558008280-b9d87398e043?w=800&q=80",
       },
       {
         title: "Кейс: открытие флагмана",
         href: "blog/case-flagship",
         meta: "Проекты",
+        imageUrl:
+          "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80",
       },
     ]),
     type: "json",
@@ -1040,6 +1200,157 @@ const ruHome: Record<string, ContentEntry> = {
     value: "2024",
     type: "text",
   },
+  "page.company.seo.title": {
+    key: "page.company.seo.title",
+    value: "Компания — Datacom",
+    type: "text",
+  },
+  "page.company.seo.description": {
+    key: "page.company.seo.description",
+    value:
+      "Системный интегратор гостиничных IT-систем и поставщик оборудования: автоматизация номеров, интеграции по всей России.",
+    type: "text",
+  },
+  "page.company.title": {
+    key: "page.company.title",
+    value: "Компания",
+    type: "text",
+  },
+  "page.company.intro": {
+    key: "page.company.intro",
+    value:
+      "Системный интегратор гостиничных IT-систем и телевидения, а также поставщик оборудования для гостиниц.",
+    type: "text",
+  },
+  "page.company.timelineStart": {
+    key: "page.company.timelineStart",
+    value: "2009",
+    type: "text",
+  },
+  "page.company.timelineEnd": {
+    key: "page.company.timelineEnd",
+    value: "2024",
+    type: "text",
+  },
+  "page.company.stats": {
+    key: "page.company.stats",
+    value: COMPANY_STATS_RU,
+    type: "json",
+  },
+  "page.company.heroImageUrl": {
+    key: "page.company.heroImageUrl",
+    value: COMPANY_HERO_IMAGE_URL,
+    type: "text",
+  },
+  "page.company.bodyHtml": {
+    key: "page.company.bodyHtml",
+    value: COMPANY_BODY_HTML_RU,
+    type: "text",
+  },
+  "page.company.pdfLabel": {
+    key: "page.company.pdfLabel",
+    value: "Корпоративный бриф (PDF)",
+    type: "text",
+  },
+  "page.company.pdfHref": {
+    key: "page.company.pdfHref",
+    value: "https://datacom.example/",
+    type: "text",
+  },
+  "page.company.clientsTitle": {
+    key: "page.company.clientsTitle",
+    value:
+      "Нам доверяют сотни отелей по всей стране, включая отели ведущих международных сетей",
+    type: "text",
+  },
+  "page.company.clientsSubtitle": {
+    key: "page.company.clientsSubtitle",
+    value: "",
+    type: "text",
+  },
+  "page.contacts.seo.title": {
+    key: "page.contacts.seo.title",
+    value: "Контакты — Datacom",
+    type: "text",
+  },
+  "page.contacts.seo.description": {
+    key: "page.contacts.seo.description",
+    value:
+      "Офисы в Санкт-Петербурге и Москве, линия технической поддержки, форма обратной связи.",
+    type: "text",
+  },
+  "page.contacts.title": {
+    key: "page.contacts.title",
+    value: "Контакты",
+    type: "text",
+  },
+  "page.contacts.offices": {
+    key: "page.contacts.offices",
+    value: CONTACTS_OFFICES_RU,
+    type: "json",
+  },
+  "page.contacts.formTitle": {
+    key: "page.contacts.formTitle",
+    value: "Напишите нам",
+    type: "text",
+  },
+  "page.contacts.formSubtitle": {
+    key: "page.contacts.formSubtitle",
+    value: "",
+    type: "text",
+  },
+  "page.blog.seo.title": {
+    key: "page.blog.seo.title",
+    value: "Новости и публикации — Datacom",
+    type: "text",
+  },
+  "page.blog.seo.description": {
+    key: "page.blog.seo.description",
+    value:
+      "Новости отрасли, обновления продуктов и истории проектов от команды Datacom.",
+    type: "text",
+  },
+  "page.blog.title": {
+    key: "page.blog.title",
+    value: "Новости и публикации",
+    type: "text",
+  },
+  "page.blog.subtitle": {
+    key: "page.blog.subtitle",
+    value: "",
+    type: "text",
+  },
+  "page.blog.posts": {
+    key: "page.blog.posts",
+    value: BLOG_POSTS_RU,
+    type: "json",
+  },
+  "page.blog.loadMoreLabel": {
+    key: "page.blog.loadMoreLabel",
+    value: "Показать ещё",
+    type: "text",
+  },
+  "page.equipment.seo.title": {
+    key: "page.equipment.seo.title",
+    value: "Оборудование и системы — Datacom",
+    type: "text",
+  },
+  "page.equipment.seo.description": {
+    key: "page.equipment.seo.description",
+    value:
+      "Электронные замки, минибары, сейфы, ТВ, АТС, автоматизация номеров, головные станции и ЛВС для отелей.",
+    type: "text",
+  },
+  "page.equipment.title": {
+    key: "page.equipment.title",
+    value: "Оборудование и системы",
+    type: "text",
+  },
+  "page.equipment.subtitle": {
+    key: "page.equipment.subtitle",
+    value: EQUIPMENT_PAGE_SUBTITLE_RU,
+    type: "text",
+  },
   "home.lead.title": {
     key: "home.lead.title",
     value: "Оставьте контакты — мы свяжемся с вами",
@@ -1048,7 +1359,7 @@ const ruHome: Record<string, ContentEntry> = {
   "home.lead.subtitle": {
     key: "home.lead.subtitle",
     value:
-      "Мы перезвоним, чтобы обсудить оборудование, Hoteza или интеграции.",
+      "Мы перезвоним, чтобы обсудить оборудование или интеграции.",
     type: "text",
   },
   "home.lead.namePh": {
@@ -1135,15 +1446,6 @@ const ruHome: Record<string, ContentEntry> = {
         ],
       },
       {
-        title: "Hoteza",
-        links: [
-          { label: "Hoteza TV", href: "#" },
-          { label: "Guest App", href: "#" },
-          { label: "HSIA", href: "#" },
-          { label: "HotPad", href: "#" },
-        ],
-      },
-      {
         title: "Интеграции",
         links: [
           { label: "Проектирование", href: "#" },
@@ -1161,6 +1463,17 @@ const ruHome: Record<string, ContentEntry> = {
   },
 };
 
+Object.assign(enHome, blogPostSeedEntriesForLang("en"));
+Object.assign(ruHome, blogPostSeedEntriesForLang("ru"));
+Object.assign(enHome, equipmentCategorySeedEntriesForLang("en"));
+Object.assign(ruHome, equipmentCategorySeedEntriesForLang("ru"));
+Object.assign(enHome, equipmentProductSeedEntriesForLang("en"));
+Object.assign(ruHome, equipmentProductSeedEntriesForLang("ru"));
+Object.assign(enHome, cookieConsentSeedEntriesForLang("en"));
+Object.assign(ruHome, cookieConsentSeedEntriesForLang("ru"));
+Object.assign(enHome, privacyPageSeedEntriesForLang("en"));
+Object.assign(ruHome, privacyPageSeedEntriesForLang("ru"));
+
 function cloneEntries(
   source: Record<string, ContentEntry>
 ): Record<string, ContentEntry> {
@@ -1174,18 +1487,116 @@ function cloneEntries(
   return out;
 }
 
+function seedTemplateForLang(code: string): Record<string, ContentEntry> {
+  /** Only `ru` has a dedicated seed file; every other locale copies EN defaults. */
+  return code === "ru" ? ruHome : enHome;
+}
+
+/** All language codes that should have a CMS bucket (registry + any loaded store keys). */
+function allLangCodesInStore(): string[] {
+  const codes = new Set<string>();
+  for (const lang of languages) {
+    codes.add(lang.code);
+  }
+  for (const code of Object.keys(byLang)) {
+    codes.add(code);
+  }
+  return [...codes];
+}
+
+/** Add missing seed keys for every configured language (e.g. new `page.company.*` after an upgrade). */
+function mergeMissingSeedKeys(): boolean {
+  let changed = false;
+  for (const code of allLangCodesInStore()) {
+    const seed = seedTemplateForLang(code);
+    if (!byLang[code]) {
+      byLang[code] = cloneEntries(seed);
+      changed = true;
+      continue;
+    }
+    const bucket = byLang[code];
+    for (const [key, entry] of Object.entries(seed)) {
+      if (!bucket[key]) {
+        bucket[key] = { ...entry };
+        changed = true;
+      }
+    }
+  }
+  if (repairLegacyNavKeysInStore(byLang)) {
+    changed = true;
+  }
+  if (removeHotezaFromContentInStore(byLang)) {
+    changed = true;
+  }
+  if (reconcileHomeClientBrandsAcrossLanguages(byLang)) {
+    changed = true;
+  }
+  if (ensureEquipmentProductStubsFromCategoryCards(byLang)) {
+    changed = true;
+  }
+  if (reconcileEquipmentCategoryProductCards(byLang)) {
+    changed = true;
+  }
+  if (reconcilePrivacyPageSeeds(byLang)) {
+    changed = true;
+  }
+  if (reconcileCookieConsentSeeds(byLang)) {
+    changed = true;
+  }
+  return changed;
+}
+
+async function persistMissingSeedKeysToDatabase(): Promise<void> {
+  const rows: {
+    langCode: string;
+    key: string;
+    value: string;
+    type: string;
+  }[] = [];
+  for (const lang of languages) {
+    const bucket = byLang[lang.code];
+    if (!bucket) {
+      continue;
+    }
+    for (const entry of Object.values(bucket)) {
+      rows.push({
+        langCode: lang.code,
+        key: entry.key,
+        value: entry.value,
+        type: entry.type,
+      });
+    }
+  }
+  if (rows.length === 0) {
+    return;
+  }
+  await prisma.contentEntry.createMany({ data: rows, skipDuplicates: true });
+}
+
+const NAV_CONTENT_KEYS = ["home.nav.megaMenu", "home.nav.items"] as const;
+
+async function persistNavKeysToDatabase(): Promise<void> {
+  for (const [langCode, bucket] of Object.entries(byLang)) {
+    for (const key of NAV_CONTENT_KEYS) {
+      const entry = bucket[key];
+      if (entry) {
+        await upsertContentRow(langCode, key, entry);
+      }
+    }
+  }
+}
+
 const byLang: Record<string, Record<string, ContentEntry>> = {
   en: cloneEntries(enHome),
   ru: cloneEntries(ruHome),
   ar: cloneEntries(enHome),
 };
 
+Object.assign(byLang.ar, privacyPageSeedEntriesForLang("ar"));
+Object.assign(byLang.ar, cookieConsentSeedEntriesForLang("ar"));
+
 /** File-backed store is only used when Postgres is not configured. */
 const useFileBackedStore = !process.env.DATABASE_URL?.trim();
-
-if (useFileBackedStore) {
-  loadPersistedContentInto(byLang);
-}
 
 let languages: Language[] = [
   { code: "en", name: "English", active: true, dir: "ltr" },
@@ -1197,6 +1608,10 @@ if (useFileBackedStore) {
   const loadedLangs = loadPersistedLanguages();
   if (loadedLangs !== null) {
     languages = loadedLangs;
+  }
+  loadPersistedContentInto(byLang);
+  if (mergeMissingSeedKeys()) {
+    savePersistedContent(byLang);
   }
 }
 
@@ -1292,6 +1707,18 @@ async function performContentHydration(): Promise<void> {
     await seedDatabaseFromMemory();
   } else {
     await loadMemoryFromDatabase();
+    if (reconcileHomeClientBrandsAcrossLanguages(byLang) && isDbEnabled()) {
+      for (const [langCode, bucket] of Object.entries(byLang)) {
+        const entry = bucket["home.clients.brands"];
+        if (entry) {
+          await upsertContentRow(langCode, entry.key, entry);
+        }
+      }
+    }
+    if (mergeMissingSeedKeys() && isDbEnabled()) {
+      await persistMissingSeedKeysToDatabase();
+      await persistNavKeysToDatabase();
+    }
   }
 }
 
@@ -1318,14 +1745,17 @@ export async function ensureContentStoreHydrated(): Promise<void> {
         );
         cmsDatabaseUnavailable = true;
         if (Object.keys(byLang).length === 0) {
-          byLang.en = cloneEntries(enHome);
-          byLang.ru = cloneEntries(ruHome);
-          byLang.ar = cloneEntries(enHome);
+          for (const lang of languages) {
+            byLang[lang.code] = cloneEntries(seedTemplateForLang(lang.code));
+          }
         }
         loadPersistedContentInto(byLang);
         const loadedLangs = loadPersistedLanguages();
         if (loadedLangs !== null) {
           languages = loadedLangs;
+        }
+        if (mergeMissingSeedKeys()) {
+          savePersistedContent(byLang);
         }
       } finally {
         contentStoreHydrated = true;
@@ -1456,6 +1886,10 @@ export async function setLanguages(next: Language[]): Promise<void> {
   const dropped = [...prevCodes].filter((c) => !nextCodes.has(c));
   languages = next.map((l) => ({ ...l }));
 
+  if (mergeMissingSeedKeys() && !isDbEnabled()) {
+    savePersistedContent(byLang);
+  }
+
   if (isDbEnabled()) {
     await ensureContentStoreHydrated();
     await prisma.$transaction(async (tx) => {
@@ -1483,12 +1917,19 @@ export function getLanguageByCode(code: string): Language | undefined {
   return languages.find((l) => l.code === code);
 }
 
-/** Ensure content bucket exists when adding a new language (copy from English). */
+/** Ensure content bucket exists when adding a new language (copy from EN seed). */
 export async function ensureLangContentBucket(langCode: string): Promise<void> {
-  if (byLang[langCode]) {
-    return;
+  const seed = seedTemplateForLang(langCode);
+  if (!byLang[langCode]) {
+    byLang[langCode] = cloneEntries(seed);
+  } else {
+    const bucket = byLang[langCode];
+    for (const [key, entry] of Object.entries(seed)) {
+      if (!bucket[key]) {
+        bucket[key] = { ...entry };
+      }
+    }
   }
-  byLang[langCode] = cloneEntries(enHome);
   if (isDbEnabled()) {
     await ensureContentStoreHydrated();
     const rows = Object.values(byLang[langCode]!).map((e) => ({
@@ -1656,6 +2097,177 @@ export function getPageContent(
     }
     return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
   }
+  if (page === "company") {
+    const prefix = "page.company.";
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    return entries.sort((a, b) => a.key.localeCompare(b.key));
+  }
+  if (page === "contacts") {
+    const prefix = "page.contacts.";
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    return entries.sort((a, b) => a.key.localeCompare(b.key));
+  }
+  if (page === "privacy") {
+    const prefix = "page.privacy.";
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    return entries.sort((a, b) => a.key.localeCompare(b.key));
+  }
+  if (page === "blog") {
+    const prefix = "page.blog.";
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    return entries.sort((a, b) => a.key.localeCompare(b.key));
+  }
+  if (page === "equipment") {
+    const prefix = "page.equipment.";
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    return entries.sort((a, b) => a.key.localeCompare(b.key));
+  }
+  if (page === "equipmentCategory" && slug) {
+    const segment = normalizeEquipmentCategorySlug(slug);
+    if (!segment) {
+      return null;
+    }
+    const prefix = `equipment.${segment}.`;
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    let outEntries = entries.sort((a, b) => a.key.localeCompare(b.key));
+    const heroKey = `equipment.${segment}.heroImage`;
+    const byKey = new Map(outEntries.map((e) => [e.key, { ...e }]));
+    const heroEntry = byKey.get(heroKey);
+    const heroEmpty = !heroEntry?.value?.trim();
+    if (heroEmpty && lang !== "en" && byLang.en) {
+      const enHero = byLang.en[heroKey];
+      if (enHero?.value?.trim()) {
+        if (heroEntry) {
+          byKey.set(heroKey, { ...heroEntry, value: enHero.value });
+        } else {
+          byKey.set(heroKey, {
+            key: heroKey,
+            value: enHero.value,
+            type: enHero.type,
+          });
+        }
+      }
+    }
+    const productSlugs = listEquipmentProductSlugsInCategory(segment);
+    byKey.set(`equipment.${segment}._productSlugs`, {
+      key: `equipment.${segment}._productSlugs`,
+      value: JSON.stringify(productSlugs),
+      type: "json",
+    });
+    byKey.set(`equipment.${segment}._productCatalog`, {
+      key: `equipment.${segment}._productCatalog`,
+      value: buildProductCatalogJsonForCategory(byLang, segment, lang),
+      type: "json",
+    });
+    const productsKey = `equipment.${segment}.products`;
+    const productsEntry = byKey.get(productsKey);
+    if (productsEntry?.value) {
+      const catalog = parseEquipmentCategoryProductCatalog(
+        byKey.get(`equipment.${segment}._productCatalog`)?.value ?? "[]"
+      );
+      let cards: EquipmentProductItem[] = [];
+      try {
+        const parsed = JSON.parse(productsEntry.value) as unknown;
+        if (Array.isArray(parsed)) {
+          cards = parsed as EquipmentProductItem[];
+        }
+      } catch {
+        cards = [];
+      }
+      const merged = buildCategoryProductsForDisplay(cards, catalog);
+      byKey.set(productsKey, {
+        ...productsEntry,
+        value: JSON.stringify(merged),
+      });
+    }
+    return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
+  }
+  if (page === "equipmentProduct" && slug) {
+    const parsed = parseEquipmentProductRouteSlug(slug);
+    if (!parsed) {
+      return null;
+    }
+    const prefix = `${equipmentProductContentPrefix(
+      parsed.categorySlug,
+      parsed.productSlug
+    )}.`;
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    let outEntries = entries.sort((a, b) => a.key.localeCompare(b.key));
+    const imagesKey = `${equipmentProductContentPrefix(
+      parsed.categorySlug,
+      parsed.productSlug
+    )}.images`;
+    const byKey = new Map(outEntries.map((e) => [e.key, { ...e }]));
+    const imagesEntry = byKey.get(imagesKey);
+    const imagesEmpty = !imagesEntry?.value?.trim();
+    if (imagesEmpty && lang !== "en" && byLang.en) {
+      const enImages = byLang.en[imagesKey];
+      if (enImages?.value?.trim()) {
+        if (imagesEntry) {
+          byKey.set(imagesKey, { ...imagesEntry, value: enImages.value });
+        } else {
+          byKey.set(imagesKey, {
+            key: imagesKey,
+            value: enImages.value,
+            type: enImages.type,
+          });
+        }
+      }
+    }
+    return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
+  }
+  if (page === "blogPost" && slug) {
+    const segment = slug.trim().toLowerCase();
+    if (!segment) {
+      return null;
+    }
+    const prefix = `blog.${segment}.`;
+    const entries = Object.values(bucket).filter((e) => e.key.startsWith(prefix));
+    if (entries.length === 0) {
+      return null;
+    }
+    let outEntries = entries.sort((a, b) => a.key.localeCompare(b.key));
+    const heroKey = `blog.${segment}.heroImage`;
+    const byKey = new Map(outEntries.map((e) => [e.key, { ...e }]));
+    const heroEntry = byKey.get(heroKey);
+    const heroEmpty = !heroEntry?.value?.trim();
+    if (heroEmpty && lang !== "en" && byLang.en) {
+      const enHero = byLang.en[heroKey];
+      if (enHero?.value?.trim()) {
+        if (heroEntry) {
+          byKey.set(heroKey, { ...heroEntry, value: enHero.value });
+        } else {
+          byKey.set(heroKey, {
+            key: heroKey,
+            value: enHero.value,
+            type: enHero.type,
+          });
+        }
+      }
+    }
+    return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
+  }
   return null;
 }
 
@@ -1666,9 +2278,21 @@ export async function setContentValue(
 ): Promise<boolean> {
   /** Case-study hero is shared: any save updates every locale bucket (admin often edits from RU only). */
   const isSharedProjectHero = /^project\.[^.]+\.heroImage$/.test(key);
-  const targetLangs = isSharedProjectHero
-    ? [...new Set([lang, ...Object.keys(byLang)])]
-    : [lang];
+  const isSharedBlogHero = /^blog\.[^.]+\.heroImage$/.test(key);
+  const isSharedEquipmentHero = /^equipment\.[^.]+\.heroImage$/.test(key);
+  const isSharedClientLogos = key === "home.clients.brands";
+  const isSharedCompanyMedia = key === "page.company.heroImageUrl";
+  const isSharedEquipmentProductImages =
+    /^equipment\.product\.[^.]+\.[^.]+\.images$/.test(key);
+  const targetLangs =
+    isSharedProjectHero ||
+    isSharedBlogHero ||
+    isSharedEquipmentHero ||
+    isSharedClientLogos ||
+    isSharedCompanyMedia ||
+    isSharedEquipmentProductImages
+      ? [...new Set([lang, ...Object.keys(byLang)])]
+      : [lang];
 
   if (isDbEnabled()) {
     await ensureContentStoreHydrated();
@@ -1693,6 +2317,41 @@ export async function setContentValue(
   if (!isDbEnabled()) {
     savePersistedContent(byLang);
   }
+
+  const blogFieldMatch = key.match(/^blog\.([^.]+)\.(title|heroImage)$/);
+  if (blogFieldMatch?.[1]) {
+    syncBlogListCardFromPost(blogFieldMatch[1], lang);
+    if (!isDbEnabled()) {
+      savePersistedContent(byLang);
+    }
+  }
+
+  const categoryProductsMatch = key.match(/^equipment\.([^.]+)\.products$/);
+  if (categoryProductsMatch?.[1]) {
+    const cat = normalizeEquipmentCategorySlug(categoryProductsMatch[1]);
+    if (cat) {
+      try {
+        const parsed = JSON.parse(value) as unknown;
+        if (Array.isArray(parsed)) {
+          for (const row of parsed) {
+            if (!row || typeof row !== "object") {
+              continue;
+            }
+            const card = row as EquipmentProductItem;
+            const slug = card.slug?.trim()
+              ? resolveEquipmentProductSlug(card.slug)
+              : null;
+            if (slug) {
+              await ensureEquipmentProductStub(cat, slug, card.title);
+            }
+          }
+        }
+      } catch {
+        /* invalid JSON — skip stub sync */
+      }
+    }
+  }
+
   return true;
 }
 
@@ -1884,6 +2543,965 @@ export async function deleteProject(rawSegment: string): Promise<boolean> {
             next,
             row.type as ContentValueType
           );
+        }
+      }
+    });
+  } else {
+    savePersistedContent(byLang);
+  }
+  return true;
+}
+
+const BLOG_STUB_FIELDS = [
+  "title",
+  "location",
+  "year",
+  "heroImage",
+  "bodyHtml",
+  "equipment",
+] as const;
+
+export function blogPostSlugExists(slug: string): boolean {
+  const prefix = `blog.${slug}.`;
+  for (const bucket of Object.values(byLang)) {
+    if (Object.keys(bucket).some((k) => k.startsWith(prefix))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export async function ensureBlogPostStub(
+  slug: string,
+  initialTitle = ""
+): Promise<void> {
+  const toPersist: { lang: string; key: string }[] = [];
+  for (const lang of Object.keys(byLang)) {
+    for (const field of BLOG_STUB_FIELDS) {
+      const key = `blog.${slug}.${field}`;
+      if (!byLang[lang]?.[key]) {
+        let initial = "";
+        if (field === "equipment") {
+          initial = "[]";
+        } else if (field === "title") {
+          initial = initialTitle;
+        }
+        const type: ContentValueType =
+          field === "equipment" ? "json" : field === "heroImage" ? "image" : "text";
+        assignContentEntry(lang, key, initial, type);
+        toPersist.push({ lang, key });
+      } else if (field === "title" && initialTitle) {
+        const cur = byLang[lang]![key]!.value.trim();
+        if (!cur) {
+          assignContentEntry(lang, key, initialTitle, "text");
+          toPersist.push({ lang, key });
+        }
+      }
+    }
+  }
+  if (toPersist.length === 0) {
+    return;
+  }
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await Promise.all(
+      toPersist.map(({ lang, key }) =>
+        upsertContentRow(lang, key, byLang[lang]![key]!)
+      )
+    );
+  } else {
+    savePersistedContent(byLang);
+  }
+}
+
+function readBlogPostCardFields(slug: string, lang: string): {
+  title: string;
+  imageUrl: string;
+  meta: string;
+} {
+  const bucket = byLang[lang] ?? byLang.en ?? {};
+  const title = bucket[`blog.${slug}.title`]?.value?.trim() ?? slug;
+  const hero =
+    bucket[`blog.${slug}.heroImage`]?.value?.trim() ??
+    byLang.en?.[`blog.${slug}.heroImage`]?.value?.trim() ??
+    "";
+  const meta =
+    bucket[`blog.${slug}.location`]?.value?.trim() ??
+    bucket[`blog.${slug}.year`]?.value?.trim() ??
+    "";
+  return { title, imageUrl: hero, meta };
+}
+
+function upsertBlogCardInJson(
+  raw: string | undefined,
+  slug: string,
+  lang: string
+): { next: string; changed: boolean } {
+  let items: BlogTeaserPost[] = [];
+  try {
+    const parsed = JSON.parse(raw ?? "[]") as unknown;
+    items = Array.isArray(parsed) ? (parsed as BlogTeaserPost[]) : [];
+  } catch {
+    items = [];
+  }
+  const href = `blog/${slug}`;
+  const fields = readBlogPostCardFields(slug, lang);
+  const idx = items.findIndex(
+    (it) => blogKeySegmentFromCardHref(it.href) === slug
+  );
+  const card: BlogTeaserPost = {
+    title: fields.title,
+    href,
+    meta: fields.meta || undefined,
+    imageUrl: fields.imageUrl || undefined,
+  };
+  if (idx >= 0) {
+    const prev = items[idx]!;
+    const same =
+      prev.title === card.title &&
+      prev.href === card.href &&
+      (prev.meta ?? "") === (card.meta ?? "") &&
+      (prev.imageUrl ?? "") === (card.imageUrl ?? "");
+    if (same) {
+      return { next: raw ?? "[]", changed: false };
+    }
+    const nextItems = [...items];
+    nextItems[idx] = card;
+    return { next: JSON.stringify(nextItems), changed: true };
+  }
+  items.push(card);
+  return { next: JSON.stringify(items), changed: true };
+}
+
+/** Updates list cards in `page.blog.posts` / `home.blog.posts` from article fields. */
+function syncBlogListCardFromPost(slug: string, lang: string): void {
+  const bucket = byLang[lang];
+  if (!bucket) {
+    return;
+  }
+  for (const listKey of ["page.blog.posts", "home.blog.posts"] as const) {
+    const entry = bucket[listKey];
+    if (!entry) {
+      continue;
+    }
+    const { next, changed } = upsertBlogCardInJson(entry.value, slug, lang);
+    if (changed) {
+      assignContentEntry(lang, listKey, next, entry.type);
+    }
+  }
+}
+
+export async function appendBlogListCard(
+  slug: string,
+  options: {
+    title?: string;
+    addToBlogIndex?: boolean;
+    addToHomeTeaser?: boolean;
+  }
+): Promise<void> {
+  const href = `blog/${slug}`;
+  const langsUpdated: string[] = [];
+
+  for (const lang of Object.keys(byLang)) {
+    const bucket = byLang[lang];
+    if (!bucket) {
+      continue;
+    }
+    const cardTitle =
+      options.title?.trim() ||
+      bucket[`blog.${slug}.title`]?.value?.trim() ||
+      slug;
+    const hero =
+      bucket[`blog.${slug}.heroImage`]?.value?.trim() ??
+      byLang.en?.[`blog.${slug}.heroImage`]?.value?.trim() ??
+      "";
+    const meta =
+      bucket[`blog.${slug}.location`]?.value?.trim() ??
+      bucket[`blog.${slug}.year`]?.value?.trim() ??
+      "";
+
+    const keysToUpdate: ("page.blog.posts" | "home.blog.posts")[] = [];
+    if (options.addToBlogIndex !== false) {
+      keysToUpdate.push("page.blog.posts");
+    }
+    if (options.addToHomeTeaser) {
+      keysToUpdate.push("home.blog.posts");
+    }
+
+    for (const listKey of keysToUpdate) {
+      let items: BlogTeaserPost[] = [];
+      try {
+        const parsed = JSON.parse(bucket[listKey]?.value ?? "[]") as unknown;
+        items = Array.isArray(parsed) ? (parsed as BlogTeaserPost[]) : [];
+      } catch {
+        items = [];
+      }
+      if (items.some((it) => blogKeySegmentFromCardHref(it.href) === slug)) {
+        continue;
+      }
+      items.push({
+        title: cardTitle,
+        href,
+        meta: meta || undefined,
+        imageUrl: hero || undefined,
+      });
+      assignContentEntry(lang, listKey, JSON.stringify(items), "json");
+      if (!langsUpdated.includes(lang)) {
+        langsUpdated.push(lang);
+      }
+    }
+  }
+
+  if (langsUpdated.length === 0) {
+    return;
+  }
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await Promise.all(
+      langsUpdated.flatMap((lang) =>
+        (["page.blog.posts", "home.blog.posts"] as const)
+          .filter((k) => byLang[lang]?.[k])
+          .map((k) => upsertContentRow(lang, k, byLang[lang]![k]!))
+      )
+    );
+  } else {
+    savePersistedContent(byLang);
+  }
+}
+
+function filterBlogCardsJson(
+  raw: string | undefined,
+  targetSlug: string
+): { next: string; changed: boolean } {
+  let items: BlogTeaserPost[] = [];
+  try {
+    const parsed = JSON.parse(raw ?? "[]") as unknown;
+    items = Array.isArray(parsed) ? (parsed as BlogTeaserPost[]) : [];
+  } catch {
+    items = [];
+  }
+  const filtered = items.filter(
+    (it) => blogKeySegmentFromCardHref(it.href) !== targetSlug
+  );
+  return {
+    next: JSON.stringify(filtered),
+    changed: filtered.length !== items.length,
+  };
+}
+
+export async function deleteBlogPost(rawSlug: string): Promise<boolean> {
+  const slug = rawSlug.trim().toLowerCase();
+  if (!slug) {
+    return false;
+  }
+  const prefix = `blog.${slug}.`;
+  const listKeys = ["page.blog.posts", "home.blog.posts"] as const;
+
+  for (const lang of Object.keys(byLang)) {
+    const bucket = byLang[lang];
+    if (!bucket) {
+      continue;
+    }
+    for (const key of Object.keys(bucket)) {
+      if (key.startsWith(prefix)) {
+        delete bucket[key];
+      }
+    }
+    for (const listKey of listKeys) {
+      const entry = bucket[listKey];
+      if (!entry) {
+        continue;
+      }
+      const { next, changed } = filterBlogCardsJson(entry.value, slug);
+      if (changed) {
+        assignContentEntry(lang, listKey, next, entry.type);
+      }
+    }
+  }
+
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await prisma.$transaction(async (tx) => {
+      await tx.contentEntry.deleteMany({
+        where: { key: { startsWith: prefix } },
+      });
+      const listRows = await tx.contentEntry.findMany({
+        where: { key: { in: [...listKeys] } },
+      });
+      for (const row of listRows) {
+        const { next, changed } = filterBlogCardsJson(row.value, slug);
+        if (changed) {
+          await tx.contentEntry.update({
+            where: {
+              langCode_key: { langCode: row.langCode, key: row.key },
+            },
+            data: { value: next },
+          });
+          assignContentEntry(
+            row.langCode,
+            row.key,
+            next,
+            row.type as ContentValueType
+          );
+        }
+      }
+    });
+  } else {
+    savePersistedContent(byLang);
+  }
+  return true;
+}
+
+const EQUIPMENT_CATEGORY_STUB_FIELDS = [
+  "seo.title",
+  "seo.description",
+  "eyebrow",
+  "title",
+  "subtitle",
+  "heroImage",
+  "highlights",
+  "productsTitle",
+  "products",
+  "specsTitle",
+  "specs",
+  "ctaLabel",
+  "ctaHref",
+  "pdfLabel",
+  "pdfHref",
+  "backLabel",
+  "bodyHtml",
+] as const;
+
+export function equipmentCategorySlugExists(slug: string): boolean {
+  const segment = normalizeEquipmentCategorySlug(slug);
+  if (!segment) {
+    return false;
+  }
+  const prefix = `equipment.${segment}.`;
+  for (const bucket of Object.values(byLang)) {
+    if (Object.keys(bucket).some((k) => k.startsWith(prefix))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function equipmentCategoryInMegaMenu(slug: string): boolean {
+  const href = equipmentCategoryHrefFromSlug(slug);
+  for (const bucket of Object.values(byLang)) {
+    const raw = bucket["home.nav.megaMenu"]?.value ?? "";
+    const items = parseMegaMenuItems(raw);
+    const idx = findEquipmentMegaItemIndex(items);
+    if (idx < 0) {
+      continue;
+    }
+    const children = items[idx]?.children ?? [];
+    if (
+      children.some(
+        (c) => equipmentCategorySlugFromNavHref(c.href) === slug
+      )
+    ) {
+      return true;
+    }
+    if (children.some((c) => c.href === href)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export async function ensureEquipmentCategoryStub(
+  slug: string,
+  initialTitle = ""
+): Promise<void> {
+  const segment = normalizeEquipmentCategorySlug(slug);
+  if (!segment) {
+    return;
+  }
+  const toPersist: { lang: string; key: string }[] = [];
+  for (const lang of Object.keys(byLang)) {
+    for (const field of EQUIPMENT_CATEGORY_STUB_FIELDS) {
+      const key = `equipment.${segment}.${field}`;
+      if (!byLang[lang]?.[key]) {
+        let initial = "";
+        if (field === "title") {
+          initial = initialTitle;
+        } else if (
+          field === "highlights" ||
+          field === "products" ||
+          field === "specs"
+        ) {
+          initial = "[]";
+        }
+        const type: ContentValueType =
+          field === "heroImage"
+            ? "image"
+            : field === "highlights" ||
+                field === "products" ||
+                field === "specs"
+              ? "json"
+              : "text";
+        assignContentEntry(lang, key, initial, type);
+        toPersist.push({ lang, key });
+      } else if (field === "title" && initialTitle) {
+        const cur = byLang[lang]![key]!.value.trim();
+        if (!cur) {
+          assignContentEntry(lang, key, initialTitle, "text");
+          toPersist.push({ lang, key });
+        }
+      }
+    }
+  }
+  if (toPersist.length === 0) {
+    return;
+  }
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await Promise.all(
+      toPersist.map(({ lang, key }) =>
+        upsertContentRow(lang, key, byLang[lang]![key]!)
+      )
+    );
+  } else {
+    savePersistedContent(byLang);
+  }
+}
+
+export async function appendEquipmentMegaMenuChild(
+  slug: string,
+  options: { title?: string; desc?: string; imageUrl?: string }
+): Promise<void> {
+  const segment = normalizeEquipmentCategorySlug(slug);
+  if (!segment) {
+    return;
+  }
+  const href = equipmentCategoryHrefFromSlug(segment);
+  const langsUpdated: string[] = [];
+
+  for (const lang of Object.keys(byLang)) {
+    const bucket = byLang[lang];
+    if (!bucket) {
+      continue;
+    }
+    const entry = bucket["home.nav.megaMenu"];
+    const items = parseMegaMenuItems(entry?.value ?? "");
+    const idx = findEquipmentMegaItemIndex(items);
+    if (idx < 0) {
+      continue;
+    }
+    const row = items[idx];
+    if (!row) {
+      continue;
+    }
+    const children = [...(row.children ?? [])];
+    if (
+      children.some(
+        (c) => equipmentCategorySlugFromNavHref(c.href) === segment
+      )
+    ) {
+      continue;
+    }
+    const label =
+      options.title?.trim() ||
+      bucket[`equipment.${segment}.title`]?.value?.trim() ||
+      segment;
+    const desc =
+      options.desc?.trim() ||
+      bucket[`equipment.${segment}.subtitle`]?.value?.trim() ||
+      "";
+    const imageUrl =
+      options.imageUrl?.trim() ||
+      bucket[`equipment.${segment}.heroImage`]?.value?.trim() ||
+      "";
+    children.push({
+      label,
+      href,
+      desc: desc || undefined,
+      imageUrl: imageUrl || undefined,
+    });
+    items[idx] = { ...row, children };
+    const next = serializeMegaMenuItems(items);
+    assignContentEntry(lang, "home.nav.megaMenu", next, "json");
+    langsUpdated.push(lang);
+  }
+
+  if (langsUpdated.length === 0) {
+    return;
+  }
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await Promise.all(
+      langsUpdated.map((lang) =>
+        upsertContentRow(
+          lang,
+          "home.nav.megaMenu",
+          byLang[lang]!["home.nav.megaMenu"]!
+        )
+      )
+    );
+  } else {
+    savePersistedContent(byLang);
+  }
+}
+
+export async function deleteEquipmentCategory(rawSlug: string): Promise<boolean> {
+  const segment = normalizeEquipmentCategorySlug(rawSlug);
+  if (!segment) {
+    return false;
+  }
+  const prefix = `equipment.${segment}.`;
+  const href = equipmentCategoryHrefFromSlug(segment);
+
+  for (const lang of Object.keys(byLang)) {
+    const bucket = byLang[lang];
+    if (!bucket) {
+      continue;
+    }
+    for (const key of Object.keys(bucket)) {
+      if (key.startsWith(prefix)) {
+        delete bucket[key];
+      }
+    }
+    const entry = bucket["home.nav.megaMenu"];
+    if (entry) {
+      const items = parseMegaMenuItems(entry.value);
+      const idx = findEquipmentMegaItemIndex(items);
+      if (idx >= 0) {
+        const row = items[idx];
+        if (row) {
+          const children = (row.children ?? []).filter(
+            (c) =>
+              equipmentCategorySlugFromNavHref(c.href) !== segment &&
+              c.href !== href
+          );
+          items[idx] = { ...row, children };
+          assignContentEntry(
+            lang,
+            "home.nav.megaMenu",
+            serializeMegaMenuItems(items),
+            "json"
+          );
+        }
+      }
+    }
+  }
+
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await prisma.$transaction(async (tx) => {
+      await tx.contentEntry.deleteMany({
+        where: { key: { startsWith: prefix } },
+      });
+      const megaRows = await tx.contentEntry.findMany({
+        where: { key: "home.nav.megaMenu" },
+      });
+      for (const row of megaRows) {
+        const items = parseMegaMenuItems(row.value);
+        const idx = findEquipmentMegaItemIndex(items);
+        if (idx < 0) {
+          continue;
+        }
+        const equipmentRow = items[idx];
+        if (!equipmentRow) {
+          continue;
+        }
+        const children = (equipmentRow.children ?? []).filter(
+          (c) =>
+            equipmentCategorySlugFromNavHref(c.href) !== segment &&
+            c.href !== href
+        );
+        if (children.length === (equipmentRow.children ?? []).length) {
+          continue;
+        }
+        items[idx] = { ...equipmentRow, children };
+        const next = serializeMegaMenuItems(items);
+        await tx.contentEntry.update({
+          where: {
+            langCode_key: { langCode: row.langCode, key: row.key },
+          },
+          data: { value: next },
+        });
+        assignContentEntry(row.langCode, row.key, next, "json");
+      }
+    });
+  } else {
+    savePersistedContent(byLang);
+  }
+  return true;
+}
+
+export function uniqueEquipmentCategorySlug(base: string): string {
+  let slug =
+    normalizeEquipmentCategorySlug(base) ??
+    slugifyEquipmentCategoryTitle(base);
+  if (!equipmentCategorySlugExists(slug) && !equipmentCategoryInMegaMenu(slug)) {
+    return slug;
+  }
+  let n = 2;
+  while (
+    equipmentCategorySlugExists(`${slug}-${n}`) ||
+    equipmentCategoryInMegaMenu(`${slug}-${n}`)
+  ) {
+    n++;
+  }
+  return `${slug}-${n}`;
+}
+
+const EQUIPMENT_PRODUCT_STUB_FIELDS = [
+  "seo.title",
+  "seo.description",
+  "title",
+  "subtitle",
+  "images",
+  "highlights",
+  "bodyHtml",
+  "specsTitle",
+  "specs",
+  "orderLabel",
+  "orderHref",
+  "ctaLabel",
+  "ctaHref",
+  "pdfLabel",
+  "pdfHref",
+] as const;
+
+/** Slugs with `equipment.product.{category}.{slug}.*` content in any locale. */
+export function listEquipmentProductSlugsInCategory(
+  categorySlug: string
+): string[] {
+  const cat = normalizeEquipmentCategorySlug(categorySlug);
+  if (!cat) {
+    return [];
+  }
+  const prefix = `equipment.product.${cat}.`;
+  const slugs = new Set<string>();
+  for (const bucket of Object.values(byLang)) {
+    for (const key of Object.keys(bucket)) {
+      if (!key.startsWith(prefix)) {
+        continue;
+      }
+      const remainder = key.slice(prefix.length);
+      const dot = remainder.indexOf(".");
+      if (dot <= 0) {
+        continue;
+      }
+      slugs.add(remainder.slice(0, dot));
+    }
+  }
+  return [...slugs].sort();
+}
+
+export function equipmentProductExists(
+  categorySlug: string,
+  productSlug: string
+): boolean {
+  const cat = normalizeEquipmentCategorySlug(categorySlug);
+  const prod = normalizeEquipmentProductSlug(productSlug);
+  if (!cat || !prod) {
+    return false;
+  }
+  const prefix = `${equipmentProductContentPrefix(cat, prod)}.`;
+  for (const bucket of Object.values(byLang)) {
+    if (Object.keys(bucket).some((k) => k.startsWith(prefix))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function uniqueEquipmentProductSlug(
+  categorySlug: string,
+  base: string
+): string {
+  const cat = normalizeEquipmentCategorySlug(categorySlug);
+  if (!cat) {
+    return "product";
+  }
+  let slug =
+    normalizeEquipmentProductSlug(base) ??
+    slugifyEquipmentProductTitle(base);
+  if (!equipmentProductExists(cat, slug)) {
+    return slug;
+  }
+  let n = 2;
+  while (equipmentProductExists(cat, `${slug}-${n}`)) {
+    n++;
+  }
+  return `${slug}-${n}`;
+}
+
+function ensureEquipmentProductStubSync(
+  categorySlug: string,
+  productSlug: string,
+  title?: string
+): boolean {
+  const cat = normalizeEquipmentCategorySlug(categorySlug);
+  const prod = normalizeEquipmentProductSlug(productSlug);
+  if (!cat || !prod) {
+    return false;
+  }
+  const initialTitle = title?.trim() || prod;
+  let changed = false;
+
+  for (const lang of Object.keys(byLang)) {
+    if (!byLang[lang]) {
+      byLang[lang] = {};
+    }
+    for (const field of EQUIPMENT_PRODUCT_STUB_FIELDS) {
+      const key = `${equipmentProductContentPrefix(cat, prod)}.${field}`;
+      if (!byLang[lang]![key]) {
+        const initial =
+          field === "images" || field === "highlights" || field === "specs"
+            ? "[]"
+            : field === "orderHref" || field === "ctaHref"
+              ? "contacts"
+              : "";
+        const type: ContentValueType =
+          field === "images" || field === "highlights" || field === "specs"
+            ? "json"
+            : "text";
+        assignContentEntry(lang, key, initial, type);
+        changed = true;
+      } else if (field === "title" && initialTitle) {
+        const cur = byLang[lang]![key]!.value.trim();
+        if (!cur) {
+          assignContentEntry(lang, key, initialTitle, "text");
+          changed = true;
+        }
+      }
+    }
+  }
+
+  return changed;
+}
+
+function ensureEquipmentProductStubsFromCategoryCards(
+  byLang: Record<string, Record<string, ContentEntry>>
+): boolean {
+  let changed = false;
+  for (const categorySlug of collectCategorySlugsFromStore(byLang)) {
+    for (const { slug, title } of slugsFromCategoryProductCards(
+      byLang,
+      categorySlug
+    )) {
+      if (!equipmentProductExists(categorySlug, slug)) {
+        if (ensureEquipmentProductStubSync(categorySlug, slug, title)) {
+          changed = true;
+        }
+      }
+    }
+  }
+  return changed;
+}
+
+export async function ensureEquipmentProductStub(
+  categorySlug: string,
+  productSlug: string,
+  title?: string
+): Promise<void> {
+  const changed = ensureEquipmentProductStubSync(categorySlug, productSlug, title);
+  if (!changed) {
+    return;
+  }
+
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    const cat = normalizeEquipmentCategorySlug(categorySlug);
+    const prod = normalizeEquipmentProductSlug(productSlug);
+    if (!cat || !prod) {
+      return;
+    }
+    const prefix = `${equipmentProductContentPrefix(cat, prod)}.`;
+    await Promise.all(
+      Object.keys(byLang).flatMap((lang) =>
+        Object.keys(byLang[lang] ?? {})
+          .filter((key) => key.startsWith(prefix))
+          .map((key) => {
+            const entry = byLang[lang]![key];
+            return entry
+              ? upsertContentRow(lang, key, entry)
+              : Promise.resolve();
+          })
+      )
+    );
+  } else {
+    savePersistedContent(byLang);
+  }
+}
+
+function appendProductToCategoryListJson(
+  raw: string,
+  card: { slug: string; title: string; desc?: string; imageUrl: string }
+): string {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    const list = Array.isArray(parsed) ? [...parsed] : [];
+    const exists = list.some(
+      (row) =>
+        typeof row === "object" &&
+        row !== null &&
+        (row as { slug?: string }).slug === card.slug
+    );
+    if (exists) {
+      return raw;
+    }
+    list.unshift(card);
+    return JSON.stringify(list);
+  } catch {
+    return JSON.stringify([card]);
+  }
+}
+
+export async function appendEquipmentProductCard(
+  categorySlug: string,
+  productSlug: string,
+  options: { title?: string; desc?: string; imageUrl?: string }
+): Promise<void> {
+  const cat = normalizeEquipmentCategorySlug(categorySlug);
+  const prod = normalizeEquipmentProductSlug(productSlug);
+  if (!cat || !prod) {
+    return;
+  }
+  const productsKey = `equipment.${cat}.products`;
+  const title =
+    options.title?.trim() ||
+    byLang.en?.[`equipment.product.${cat}.${prod}.title`]?.value?.trim() ||
+    prod;
+  const imageUrl =
+    options.imageUrl?.trim() ||
+    (() => {
+      try {
+        const imgs = JSON.parse(
+          byLang.en?.[`equipment.product.${cat}.${prod}.images`]?.value ?? "[]"
+        ) as { imageUrl?: string }[];
+        return imgs[0]?.imageUrl?.trim() ?? "";
+      } catch {
+        return "";
+      }
+    })() ||
+    "";
+  const card = {
+    slug: prod,
+    title,
+    desc: options.desc?.trim() || undefined,
+    imageUrl:
+      imageUrl ||
+      byLang.en?.[`equipment.${cat}.heroImage`]?.value?.trim() ||
+      "",
+  };
+
+  for (const lang of Object.keys(byLang)) {
+    const bucket = byLang[lang];
+    if (!bucket) {
+      continue;
+    }
+    const entry = bucket[productsKey];
+    if (!entry) {
+      continue;
+    }
+    const next = appendProductToCategoryListJson(entry.value, card);
+    if (next !== entry.value) {
+      assignContentEntry(lang, productsKey, next, entry.type);
+    }
+  }
+
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await Promise.all(
+      Object.keys(byLang).map((lang) => {
+        const entry = byLang[lang]?.[productsKey];
+        if (!entry) {
+          return Promise.resolve();
+        }
+        return upsertContentRow(lang, productsKey, entry);
+      })
+    );
+  } else {
+    savePersistedContent(byLang);
+  }
+}
+
+export async function deleteEquipmentProduct(
+  categorySlug: string,
+  productSlug: string
+): Promise<boolean> {
+  const cat = normalizeEquipmentCategorySlug(categorySlug);
+  const prod = normalizeEquipmentProductSlug(productSlug);
+  if (!cat || !prod) {
+    return false;
+  }
+  const prefix = `${equipmentProductContentPrefix(cat, prod)}.`;
+  const productsKey = `equipment.${cat}.products`;
+
+  for (const lang of Object.keys(byLang)) {
+    const bucket = byLang[lang];
+    if (!bucket) {
+      continue;
+    }
+    for (const key of Object.keys(bucket)) {
+      if (key.startsWith(prefix)) {
+        delete bucket[key];
+      }
+    }
+    const entry = bucket[productsKey];
+    if (entry) {
+      try {
+        const parsed = JSON.parse(entry.value) as unknown;
+        if (Array.isArray(parsed)) {
+          const next = parsed.filter(
+            (row) =>
+              !(
+                typeof row === "object" &&
+                row !== null &&
+                (row as { slug?: string }).slug === prod
+              )
+          );
+          if (next.length !== parsed.length) {
+            assignContentEntry(lang, productsKey, JSON.stringify(next), entry.type);
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  if (isDbEnabled()) {
+    await ensureContentStoreHydrated();
+    await prisma.$transaction(async (tx) => {
+      await tx.contentEntry.deleteMany({
+        where: { key: { startsWith: prefix } },
+      });
+      const rows = await tx.contentEntry.findMany({
+        where: { key: productsKey },
+      });
+      for (const row of rows) {
+        try {
+          const parsed = JSON.parse(row.value) as unknown;
+          if (!Array.isArray(parsed)) {
+            continue;
+          }
+          const next = parsed.filter(
+            (item) =>
+              !(
+                typeof item === "object" &&
+                item !== null &&
+                (item as { slug?: string }).slug === prod
+              )
+          );
+          if (next.length === parsed.length) {
+            continue;
+          }
+          const value = JSON.stringify(next);
+          await tx.contentEntry.update({
+            where: {
+              langCode_key: { langCode: row.langCode, key: row.key },
+            },
+            data: { value },
+          });
+          assignContentEntry(row.langCode, row.key, value, row.type as ContentValueType);
+        } catch {
+          /* ignore */
         }
       }
     });

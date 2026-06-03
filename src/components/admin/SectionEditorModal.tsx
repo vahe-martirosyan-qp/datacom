@@ -18,6 +18,14 @@ import { AdminImageUrlField } from "./AdminImageUrlField";
 import {
   BlogPostsEditor,
   BrandListEditor,
+  CompanyStatsEditor,
+  ContactOfficesEditor,
+  EquipmentCategoriesEditor,
+  EquipmentHighlightsEditor,
+  EquipmentProductImagesEditor,
+  EquipmentProductsEditor,
+  EquipmentSingleCategoryEditor,
+  EquipmentSpecsEditor,
   FeatureCardsEditor,
   FooterColumnsEditor,
   ProjectCardsEditor,
@@ -47,6 +55,20 @@ interface SectionEditorModalProps {
    * locale after a project save. Also required when `syncKeysAcrossLanguages` is used.
    */
   syncLanguageCodes?: string[];
+  /** Which content bucket this editor saves to (for cache invalidation). */
+  contentPage?:
+    | "home"
+    | "company"
+    | "contacts"
+    | "privacy"
+    | "blog"
+    | "equipment"
+    | "equipmentProduct";
+  /** When editing one equipment category card in mega-menu (`section.id === "card"`). */
+  equipmentCategorySlug?: string;
+  /** When editing an equipment product detail page. */
+  equipmentProductCategorySlug?: string;
+  equipmentProductSlug?: string;
 }
 
 interface SimpleFieldProps {
@@ -97,6 +119,10 @@ export function SectionEditorModal({
   variant = "modal",
   syncKeysAcrossLanguages,
   syncLanguageCodes,
+  contentPage = "home",
+  equipmentCategorySlug,
+  equipmentProductCategorySlug,
+  equipmentProductSlug,
 }: SectionEditorModalProps) {
   const [values, setValues] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
@@ -141,7 +167,26 @@ export function SectionEditorModal({
       }
     },
     onMutate: async (payload) => {
-      const qk = queryKeys.content("home", payload.lang);
+      const qk =
+        contentPage === "company"
+          ? queryKeys.contentCompany(payload.lang)
+          : contentPage === "contacts"
+            ? queryKeys.contentContacts(payload.lang)
+            : contentPage === "privacy"
+              ? queryKeys.contentPrivacy(payload.lang)
+              : contentPage === "blog"
+                ? queryKeys.contentBlog(payload.lang)
+                : contentPage === "equipment"
+                  ? queryKeys.contentEquipment(payload.lang)
+                  : contentPage === "equipmentProduct" &&
+                      equipmentProductCategorySlug &&
+                      equipmentProductSlug
+                    ? queryKeys.contentEquipmentProduct(
+                        payload.lang,
+                        equipmentProductCategorySlug,
+                        equipmentProductSlug
+                      )
+                    : queryKeys.content("home", payload.lang);
       await queryClient.cancelQueries({ queryKey: qk });
       const previous = queryClient.getQueryData<HomeContentResponse>(qk);
       if (previous) {
@@ -165,19 +210,115 @@ export function SectionEditorModal({
       if (!payload) {
         return;
       }
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.content("home", payload.lang),
-      });
+      const hasCompanyKeys = Object.keys(payload.values).some((k) =>
+        k.startsWith("page.company.")
+      );
+      const hasContactsKeys = Object.keys(payload.values).some((k) =>
+        k.startsWith("page.contacts.")
+      );
+      const hasPrivacyKeys = Object.keys(payload.values).some((k) =>
+        k.startsWith("page.privacy.")
+      );
+      const hasBlogKeys = Object.keys(payload.values).some((k) =>
+        k.startsWith("page.blog.")
+      );
+      const hasEquipmentKeys = Object.keys(payload.values).some((k) =>
+        k.startsWith("page.equipment.")
+      );
+      const hasMegaMenuKey = Object.keys(payload.values).includes(
+        "home.nav.megaMenu"
+      );
+      if (contentPage === "company" || hasCompanyKeys) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentCompany(payload.lang),
+        });
+      }
+      if (contentPage === "contacts" || hasContactsKeys) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentContacts(payload.lang),
+        });
+      }
+      if (contentPage === "privacy" || hasPrivacyKeys) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentPrivacy(payload.lang),
+        });
+      }
+      if (contentPage === "blog" || hasBlogKeys) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentBlog(payload.lang),
+        });
+      }
+      if (contentPage === "equipment" || hasEquipmentKeys) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentEquipment(payload.lang),
+        });
+      }
+      if (hasMegaMenuKey) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.content("home", payload.lang),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentEquipment(payload.lang),
+        });
+      }
+      const savedClientBrands = Object.prototype.hasOwnProperty.call(
+        payload.values,
+        "home.clients.brands"
+      );
+      const savedCompanyMedia = Object.prototype.hasOwnProperty.call(
+        payload.values,
+        "page.company.heroImageUrl"
+      );
+      const homeLangsToRefresh =
+        savedClientBrands && syncLangs && syncLangs.length > 0
+          ? syncLangs
+          : [payload.lang];
+      if (contentPage === "home" || savedClientBrands) {
+        for (const lc of homeLangsToRefresh) {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.content("home", lc),
+          });
+        }
+      }
+      const companyLangsToRefresh =
+        savedCompanyMedia && syncLangs && syncLangs.length > 0
+          ? syncLangs
+          : [payload.lang];
+      if (contentPage === "company" || savedCompanyMedia) {
+        for (const lc of companyLangsToRefresh) {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.contentCompany(lc),
+          });
+        }
+      }
       const projectSegments = new Set<string>();
+      const blogPostSegments = new Set<string>();
+      const equipmentCategorySegments = new Set<string>();
+      const equipmentProductSegments = new Set<string>();
       for (const k of Object.keys(payload.values)) {
         const m = k.match(/^project\.([^.]+)\./);
         if (m?.[1]) {
           projectSegments.add(m[1]);
         }
+        const b = k.match(/^blog\.([^.]+)\./);
+        if (b?.[1]) {
+          blogPostSegments.add(b[1]);
+        }
+        const prod = k.match(/^equipment\.product\.([^.]+)\.([^.]+)\./);
+        if (prod?.[1] && prod?.[2]) {
+          equipmentProductSegments.add(`${prod[1]}/${prod[2]}`);
+        }
+        const e = k.match(/^equipment\.(?!product\.)([^.]+)\./);
+        if (e?.[1]) {
+          equipmentCategorySegments.add(e[1]);
+        }
       }
       /** Project saves: refresh every locale for this segment (hero is shared; fields differ per lang). */
       const langsToRefresh =
-        syncLangs && (syncKeys.length > 0 || projectSegments.size > 0)
+        syncLangs &&
+        (syncKeys.length > 0 ||
+          projectSegments.size > 0 ||
+          blogPostSegments.size > 0)
           ? syncLangs
           : [payload.lang];
       for (const s of projectSegments) {
@@ -186,6 +327,49 @@ export function SectionEditorModal({
             queryKey: queryKeys.contentProject(lc, s),
           });
         }
+      }
+      for (const s of blogPostSegments) {
+        for (const lc of langsToRefresh) {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.contentBlogPost(lc, s),
+          });
+        }
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentBlog(payload.lang),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.content("home", payload.lang),
+        });
+      }
+      for (const s of equipmentCategorySegments) {
+        for (const lc of langsToRefresh) {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.contentEquipmentCategory(lc, s),
+          });
+        }
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentEquipment(payload.lang),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.content("home", payload.lang),
+        });
+      }
+      for (const composite of equipmentProductSegments) {
+        const [cat, prod] = composite.split("/");
+        if (!cat || !prod) {
+          continue;
+        }
+        for (const lc of langsToRefresh) {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.contentEquipmentProduct(lc, cat, prod),
+          });
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.contentEquipmentCategory(lc, cat),
+          });
+        }
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.contentEquipment(payload.lang),
+        });
       }
     },
   });
@@ -215,6 +399,34 @@ export function SectionEditorModal({
   const renderField = (key: string) => {
     const kind = getAdminFieldKind(key);
     const value = values[key] ?? "";
+
+    if (
+      section?.id === "equipment-categories" &&
+      key === "home.nav.megaMenu"
+    ) {
+      return (
+        <EquipmentCategoriesEditor
+          key={key}
+          value={value}
+          onChange={(v) => setKey(key, v)}
+        />
+      );
+    }
+
+    if (
+      section?.id === "card" &&
+      equipmentCategorySlug &&
+      key === "home.nav.megaMenu"
+    ) {
+      return (
+        <EquipmentSingleCategoryEditor
+          key={key}
+          categorySlug={equipmentCategorySlug}
+          value={value}
+          onChange={(v) => setKey(key, v)}
+        />
+      );
+    }
 
     switch (kind) {
       case "navItems":
@@ -257,6 +469,22 @@ export function SectionEditorModal({
             onChange={(v) => setKey(key, v)}
           />
         );
+      case "companyStats":
+        return (
+          <CompanyStatsEditor
+            key={key}
+            value={value}
+            onChange={(v) => setKey(key, v)}
+          />
+        );
+      case "contactOffices":
+        return (
+          <ContactOfficesEditor
+            key={key}
+            value={value}
+            onChange={(v) => setKey(key, v)}
+          />
+        );
       case "blogPosts":
         return (
           <BlogPostsEditor
@@ -284,6 +512,39 @@ export function SectionEditorModal({
       case "footerColumns":
         return (
           <FooterColumnsEditor
+            key={key}
+            value={value}
+            onChange={(v) => setKey(key, v)}
+          />
+        );
+      case "equipmentHighlights":
+        return (
+          <EquipmentHighlightsEditor
+            key={key}
+            value={value}
+            onChange={(v) => setKey(key, v)}
+          />
+        );
+      case "equipmentProducts":
+        return (
+          <EquipmentProductsEditor
+            key={key}
+            value={value}
+            onChange={(v) => setKey(key, v)}
+            categorySlug={equipmentCategorySlug}
+          />
+        );
+      case "equipmentSpecs":
+        return (
+          <EquipmentSpecsEditor
+            key={key}
+            value={value}
+            onChange={(v) => setKey(key, v)}
+          />
+        );
+      case "equipmentProductImages":
+        return (
+          <EquipmentProductImagesEditor
             key={key}
             value={value}
             onChange={(v) => setKey(key, v)}

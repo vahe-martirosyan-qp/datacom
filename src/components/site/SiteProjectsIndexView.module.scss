@@ -2,10 +2,23 @@
 
 .siteProjectsIndex {
   flex: 1;
-  padding-block: var(--space-12) var(--space-16);
-  background: var(--color-surface-alt);
+  background: var(--color-surface);
 
-  &__inner {
+  &__hero {
+    padding-block: var(--space-12) var(--space-8);
+    @include mixins.page-hero-band;
+  }
+
+  &__heroInner {
+    @include mixins.container;
+    max-width: 1100px;
+  }
+
+  &__body {
+    padding-block: var(--space-10) var(--space-16);
+  }
+
+  &__bodyInner {
     @include mixins.container;
     max-width: 1100px;
   }
@@ -13,11 +26,11 @@
   &__crumb {
     margin-bottom: var(--space-6);
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    color: var(--color-text-inverse-muted);
   }
 
   &__crumbLink {
-    color: var(--color-link);
+    color: var(--color-text-inverse);
     text-decoration: none;
 
     &:hover {
@@ -26,10 +39,15 @@
   }
 
   &__title {
-    margin: 0 0 var(--space-8);
-    font-size: var(--text-3xl);
+    margin: 0;
+    font-size: var(--text-page-title);
     font-weight: 700;
-    color: var(--color-text);
+    color: var(--color-text-inverse);
+    line-height: 1.15;
+
+    @include mixins.bp-md {
+      font-size: var(--text-page-title-lg);
+    }
   }
 
   &__grid {

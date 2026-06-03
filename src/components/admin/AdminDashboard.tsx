@@ -15,6 +15,27 @@ const LINKS: { href: string; title: string; desc: string }[] = [
     desc: "SEO, баннер, цифры, блоки контента, форма, проекты, клиенты, блог.",
   },
   {
+    href: "/admin/company",
+    title: "Компания",
+    desc: "Страница `/[lang]/company`.",
+  },
+  {
+    href: "/admin/contacts",
+    title: "Контакты",
+    desc: "Страница `/[lang]/contacts`.",
+  },
+  {
+    href: "/admin/equipment",
+    title: "Оборудование и системы",
+    desc:
+      "Пункты меню «Equipment & systems»: категории, карточки на странице категории и отдельные страницы товаров с галереей.",
+  },
+  {
+    href: "/admin/privacy",
+    title: "Политика конфиденциальности",
+    desc: "Страница `/[lang]/privacy-policy` — текст политики в TipTap.",
+  },
+  {
     href: "/admin/navigation",
     title: "Предпросмотр меню",
     desc: "Дерево пунктов мега-меню (только просмотр; правки — в «Глобальные»).",

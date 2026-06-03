@@ -26,7 +26,7 @@
 
   &__title {
     margin: 0 0 var(--space-4);
-    font-size: var(--text-3xl);
+    font-size: var(--text-section-title);
     font-weight: 700;
     line-height: 1.2;
     color: var(--color-text);
@@ -60,7 +60,7 @@
     background: linear-gradient(
       90deg,
       var(--color-accent) 0%,
-      rgba(255, 106, 0, 0.25) 100%
+      var(--color-accent-25) 100%
     );
   }
 
@@ -79,7 +79,7 @@
     margin-bottom: var(--space-6);
     background: var(--color-accent-soft);
     border-radius: var(--radius-lg);
-    border: 1px solid rgba(255, 106, 0, 0.22);
+    border: 1px solid var(--color-accent-22);
     transition: transform var(--t-normal) var(--ease-out),
       box-shadow var(--t-normal) var(--ease-out);
 
@@ -149,14 +149,6 @@
     &:hover {
       gap: var(--space-3);
     }
-  }
-
-  &__metaArrow {
-    transition: transform var(--t-normal) var(--ease-out);
-  }
-
-  &__metaCta:hover &__metaArrow {
-    transform: translateX(4px);
   }
 
   &__figure {

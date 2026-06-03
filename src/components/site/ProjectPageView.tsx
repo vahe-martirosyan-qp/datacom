@@ -112,35 +112,58 @@ export function ProjectPageView({ lang, projectId }: ProjectPageViewProps) {
         className={styles.projectPage}
         lang={lang}
       >
-        <div className={styles.projectPage__inner}>
-          <nav className={styles.projectPage__crumb} aria-label="Breadcrumb">
-            <Link href={`/${lang}`} className={styles.projectPage__crumbLink}>
-              {homeLabel}
-            </Link>
-            <span aria-hidden> / </span>
-            <Link
-              href={`/${lang}/projects`}
-              className={styles.projectPage__crumbLink}
-            >
-              {projectsLabel}
-            </Link>
-            <span aria-hidden> / </span>
-            <span>{title || projectId}</span>
-          </nav>
+        <div className={styles.projectPage__heroBand}>
+          <div className={styles.projectPage__heroBandInner}>
+            <nav className={styles.projectPage__crumb} aria-label="Breadcrumb">
+              <Link href={`/${lang}`} className={styles.projectPage__crumbLink}>
+                {homeLabel}
+              </Link>
+              <span aria-hidden> / </span>
+              <Link
+                href={`/${lang}/projects`}
+                className={styles.projectPage__crumbLink}
+              >
+                {projectsLabel}
+              </Link>
+              <span aria-hidden> / </span>
+              <span>{title || projectId}</span>
+            </nav>
 
+            {isLoading ? (
+              <div className={styles.projectPage__loading}>
+                <Skeleton variant="title" />
+              </div>
+            ) : (
+              <header className={styles.projectPage__intro}>
+                <h1
+                  id="project-page-title"
+                  className={styles.projectPage__title}
+                >
+                  {title}
+                </h1>
+                {[location, year].filter(Boolean).length > 0 ? (
+                  <p className={styles.projectPage__meta}>
+                    {[location, year].filter(Boolean).join(" · ")}
+                  </p>
+                ) : null}
+              </header>
+            )}
+          </div>
+        </div>
+
+        <div className={styles.projectPage__inner}>
           {isLoading ? (
             <div className={styles.projectPage__loading}>
-              <Skeleton variant="title" />
               <Skeleton variant="image" />
               <Skeleton variant="text" />
             </div>
           ) : (
             <>
-              <section
-                className={styles.projectPage__heroSection}
-                aria-labelledby="project-page-title"
-              >
-                {heroImage ? (
+              {heroImage ? (
+                <section
+                  className={styles.projectPage__heroSection}
+                  aria-labelledby="project-page-title"
+                >
                   <div className={styles.projectPage__hero}>
                     <Image
                       src={heroImage}
@@ -151,21 +174,8 @@ export function ProjectPageView({ lang, projectId }: ProjectPageViewProps) {
                       priority
                     />
                   </div>
-                ) : null}
-                <div className={styles.projectPage__intro}>
-                  <h1
-                    id="project-page-title"
-                    className={styles.projectPage__title}
-                  >
-                    {title}
-                  </h1>
-                  {[location, year].filter(Boolean).length > 0 ? (
-                    <p className={styles.projectPage__meta}>
-                      {[location, year].filter(Boolean).join(" · ")}
-                    </p>
-                  ) : null}
-                </div>
-              </section>
+                </section>
+              ) : null}
 
               {equipment.length > 0 ? (
                 <section

@@ -20,7 +20,7 @@
   }
 
   &__error {
-    color: #b91c1c;
+    color: var(--color-error);
     font-size: var(--text-sm);
   }
 

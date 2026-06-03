@@ -22,7 +22,7 @@
 
   &__title {
     margin: 0;
-    font-size: var(--text-3xl);
+    font-size: var(--text-section-title);
     font-weight: 700;
     color: var(--color-text);
     letter-spacing: -0.02em;
@@ -47,17 +47,8 @@
 
   &__arrow {
     display: inline-block;
-    transition: transform var(--t-normal) var(--ease-out);
     font-size: 1.25em;
     line-height: 1;
-  }
-
-  &__cta:hover &__arrow {
-    transform: translateX(6px);
-  }
-
-  :global(.site-lang-root[dir="rtl"]) &__cta:hover &__arrow {
-    transform: translateX(-6px);
   }
 
   &__grid {
@@ -123,7 +114,7 @@
     background: linear-gradient(
       135deg,
       var(--color-border-dark) 0%,
-      #e8ecf2 100%
+      var(--color-surface-gradient-stop) 100%
     );
   }
 
@@ -136,7 +127,7 @@
 
   &__cardTitle {
     margin: 0;
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     font-weight: 700;
     line-height: 1.35;
     color: var(--color-text);

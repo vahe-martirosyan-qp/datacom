@@ -1,28 +1,127 @@
 :root {
-  --color-bg-deep: #080c11;
-  --color-bg-header: #0d1219;
-  --color-bg-elevated: #121a24;
-  --color-bg-panel: #1a2332;
-  --color-surface: #eef1f6;
-  --color-surface-alt: #ffffff;
-  --color-border: rgba(255, 255, 255, 0.09);
-  --color-border-dark: #d8dee9;
-  --color-text: #121820;
-  --color-text-muted: #5a6578;
-  --color-text-inverse: #f4f7fb;
-  --color-text-inverse-muted: #8b9aae;
-  --color-accent: #ff6a00;
-  --color-accent-hover: #ff8534;
-  --color-accent-soft: rgba(255, 106, 0, 0.14);
-  --color-link: #2b6cb0;
-  --shadow-soft: 0 20px 50px rgba(8, 12, 20, 0.14);
-  --shadow-dropdown: 0 28px 60px rgba(0, 0, 0, 0.45);
-  --shadow-card-hover: 0 22px 44px rgba(15, 23, 42, 0.12);
+  /*
+   * Neutral scale (white → black). Semantic tokens below reference these only.
+   */
+  --gray-0: #ffffff;
+  --gray-50: #fafafa;
+  --gray-100: #f5f5f5;
+  --gray-150: #ebebeb;
+  --gray-200: #e0e0e0;
+  --gray-300: #c4c4c4;
+  --gray-400: #9a9a9a;
+  --gray-500: #6b6b6b;
+  --gray-600: #4a4a4a;
+  --gray-700: #333333;
+  --gray-800: #1f1f1f;
+  --gray-900: #141414;
+  --gray-950: #0a0a0a;
+  --gray-1000: #000000;
+
+  /* Surfaces — light */
+  --color-white: var(--gray-0);
+  --color-black: var(--gray-1000);
+  --color-bg-header: var(--gray-0);
+  --color-surface-alt: var(--gray-0);
+  --color-surface: var(--gray-100);
+  --color-surface-gradient-stop: var(--gray-150);
+  --color-border-dark: var(--gray-200);
+  --color-skeleton-shine: var(--gray-100);
+
+  /* Surfaces — dark */
+  --color-bg-deep: var(--gray-950);
+  --color-bg-contact-stop: var(--gray-900);
+  --color-bg-elevated: var(--gray-800);
+  --color-bg-panel: var(--gray-700);
+  --color-border: color-mix(in srgb, var(--gray-0) 10%, transparent);
+
+  /* Text on light backgrounds */
+  --color-text: var(--gray-900);
+  --color-text-muted: var(--gray-500);
+  --color-link: var(--gray-700);
+
+  /* Text on dark backgrounds */
+  --color-text-inverse: var(--gray-50);
+  --color-text-inverse-muted: var(--gray-400);
+
+  /* Accent (highlights on light/dark UI — not primary buttons) */
+  --color-accent: var(--gray-600);
+  --color-accent-hover: var(--gray-500);
+
+  /* Primary buttons — dark fill, light label */
+  --color-button-bg: var(--gray-900);
+  --color-button-bg-hover: var(--gray-800);
+  --color-button-text: var(--gray-0);
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  --color-accent-06: color-mix(in srgb, var(--color-accent) 6%, transparent);
+  --color-accent-12: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  --color-accent-22: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  --color-accent-25: color-mix(in srgb, var(--color-accent) 25%, transparent);
+  --color-accent-35: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  --color-accent-40: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  --color-accent-42: color-mix(in srgb, var(--color-accent) 42%, transparent);
+  --color-accent-45: color-mix(in srgb, var(--color-accent) 45%, transparent);
+
+  /* Hero / overlay fades */
+  --color-bg-deep-40: color-mix(in srgb, var(--color-bg-deep) 40%, transparent);
+  --color-bg-deep-65: color-mix(in srgb, var(--color-bg-deep) 65%, transparent);
+  --color-bg-deep-94: color-mix(in srgb, var(--color-bg-deep) 94%, transparent);
+
+  /* Overlays on dark UI (mega-menu, stats, mobile drawer) */
+  --color-on-inverse-04: color-mix(in srgb, var(--gray-0) 4%, transparent);
+  --color-on-inverse-05: color-mix(in srgb, var(--gray-0) 5%, transparent);
+  --color-on-inverse-06: color-mix(in srgb, var(--gray-0) 6%, transparent);
+  --color-on-inverse-08: color-mix(in srgb, var(--gray-0) 8%, transparent);
+  --color-on-inverse-10: color-mix(in srgb, var(--gray-0) 10%, transparent);
+  --color-on-inverse-12: color-mix(in srgb, var(--gray-0) 12%, transparent);
+  --color-on-inverse-border: color-mix(in srgb, var(--gray-0) 20%, transparent);
+
+  /* Overlays on light UI (cards, header hovers) */
+  --color-on-surface-04: color-mix(in srgb, var(--gray-1000) 4%, transparent);
+  --color-on-surface-06: color-mix(in srgb, var(--gray-1000) 6%, transparent);
+  --color-on-surface-08: color-mix(in srgb, var(--gray-1000) 8%, transparent);
+  --color-on-surface-20: color-mix(in srgb, var(--gray-1000) 20%, transparent);
+  --color-on-surface-22: color-mix(in srgb, var(--gray-1000) 22%, transparent);
+  --color-on-surface-24: color-mix(in srgb, var(--gray-1000) 24%, transparent);
+
+  /* Header scroll fade (white bar) */
+  --color-header-fade-94: color-mix(in srgb, var(--gray-0) 94%, transparent);
+  --color-header-fade-82: color-mix(in srgb, var(--gray-0) 82%, transparent);
+  --color-header-fade-65: color-mix(in srgb, var(--gray-0) 65%, transparent);
+
+  --color-shadow-06: color-mix(in srgb, var(--gray-1000) 6%, transparent);
+  --color-shadow-35: color-mix(in srgb, var(--gray-1000) 35%, transparent);
+
+  /* Status */
+  --color-error: #b91c1c;
+  --color-error-hover: #991b1b;
+  --color-error-04: color-mix(in srgb, var(--color-error) 4%, transparent);
+  --color-error-06: color-mix(in srgb, var(--color-error) 6%, transparent);
+  --color-error-08: color-mix(in srgb, var(--color-error) 8%, transparent);
+  --color-error-border: color-mix(in srgb, var(--color-error) 35%, transparent);
+  --color-error-border-strong: color-mix(in srgb, var(--color-error) 40%, transparent);
+  --color-success: #15803d;
+  --color-success-10: color-mix(in srgb, var(--color-success) 10%, transparent);
+  --color-on-accent: var(--gray-0);
+  --color-modal-scrim: color-mix(in srgb, var(--gray-1000) 55%, transparent);
+
+  --shadow-soft: 0 20px 50px color-mix(in srgb, var(--gray-1000) 14%, transparent);
+  --shadow-dropdown: 0 28px 60px color-mix(in srgb, var(--gray-1000) 45%, transparent);
+  --shadow-card-hover: 0 22px 44px color-mix(in srgb, var(--gray-1000) 12%, transparent);
+  --shadow-cta-sm: 0 10px 24px var(--color-accent-35);
+  --shadow-cta-md: 0 14px 32px var(--color-accent-40);
+  --shadow-cta-lg: 0 16px 40px var(--color-accent-42);
+  --shadow-stats-hover: 0 20px 50px var(--color-shadow-35);
+  --shadow-admin-card: 0 8px 24px color-mix(in srgb, var(--gray-1000) 8%, transparent);
+  --shadow-equipment-card: 0 8px 24px var(--color-shadow-06);
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 18px;
   --container-max: 1220px;
   --header-h: 76px;
+  --site-shell-inset: 2.5%;
+  --site-shell-radius: 60px;
+  --header-corner-w: 20px;
+  --header-corner-h: 56px;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -35,15 +134,21 @@
   --space-16: 4rem;
   --space-20: 5rem;
   --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
-  --text-5xl: clamp(2.1rem, 4.5vw, 3.15rem);
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 2.875rem;
+  --text-5xl: clamp(2.75rem, 5.5vw, 4rem);
+  --text-hero-title: var(--text-5xl);
+  --text-page-title: var(--text-3xl);
+  --text-page-title-lg: var(--text-4xl);
+  --text-section-title: var(--text-3xl);
+  --text-subsection-title: var(--text-2xl);
+  --text-promo: clamp(1.75rem, 4.5vw, var(--text-4xl));
   --bp-md: 768px;
   --bp-lg: 1024px;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -53,4 +158,7 @@
   --t-slow: 0.4s;
   --z-header: 100;
   --z-mega: 90;
+  /** Modals / lightboxes above header inner (2000) and corner masks (1999). */
+  --z-cookie-consent: 2100;
+  --z-overlay: 2200;
 }

@@ -11,7 +11,7 @@
 
   &__title {
     margin: 0 0 var(--space-3);
-    font-size: var(--text-3xl);
+    font-size: var(--text-section-title);
     font-weight: 700;
     color: var(--color-text);
   }
@@ -24,23 +24,49 @@
     line-height: 1.55;
   }
 
-  &__brands {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
-    justify-content: center;
+  &__logos {
+    --clients-logo-max-w: 17.5rem;
+    --clients-logo-max-h: 6.5rem;
+    display: grid;
+    gap: var(--space-8) var(--space-6);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     list-style: none;
     margin: 0;
     padding: 0;
+
+    @include mixins.bp-md {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    @include mixins.bp-lg {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
   }
 
-  &__brand {
-    padding: var(--space-3) var(--space-6);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--color-text-muted);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border-dark);
-    border-radius: var(--radius-md);
+  &__logoItem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(var(--clients-logo-max-h) + var(--space-4));
+
+    @include mixins.bp-md {
+      min-height: calc(var(--clients-logo-max-h) + var(--space-6));
+    }
+  }
+
+  &__logoFrame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: var(--clients-logo-max-w);
+    margin-inline: auto;
+  }
+
+  &__logoImg {
+    width: 100%;
+    height: auto;
+    max-height: var(--clients-logo-max-h);
+    object-fit: contain;
   }
 }

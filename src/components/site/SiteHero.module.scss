@@ -2,26 +2,17 @@
 
 .siteHero {
   position: relative;
+  z-index: 0;
   color: var(--color-text-inverse);
-  background: var(--color-bg-deep);
+  background: var(--color-black);
   overflow: hidden;
 
   &__media {
     position: absolute;
-    inset: 0;
     z-index: 0;
-
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        100deg,
-        rgba(8, 12, 17, 0.94) 0%,
-        rgba(8, 12, 17, 0.65) 45%,
-        rgba(8, 12, 17, 0.4) 100%
-      );
-    }
+    inset: 0;
+    overflow: hidden;
+    @include mixins.page-hero-photo-overlay;
   }
 
   &__image {
@@ -34,7 +25,7 @@
     position: relative;
     z-index: 1;
     @include mixins.container;
-    padding-block: clamp(4rem, 12vw, 7rem) var(--space-12);
+    padding-block: clamp(3rem, 10vw, 5.5rem) var(--space-12);
     min-height: min(82vh, 760px);
     display: flex;
     flex-direction: column;
@@ -45,7 +36,7 @@
   &__title {
     margin: 0;
     max-width: 22ch;
-    font-size: var(--text-5xl);
+    font-size: var(--text-hero-title);
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -0.03em;
@@ -76,22 +67,14 @@
     padding: var(--space-3) var(--space-10);
     font-size: var(--text-base);
     font-weight: 600;
-    color: var(--color-bg-deep);
-    background: var(--color-accent);
+    @include mixins.button-primary;
     border-radius: var(--radius-md);
     text-decoration: none;
     transition: background var(--t-fast) var(--ease-out),
-      transform var(--t-normal) var(--ease-out),
       box-shadow var(--t-normal) var(--ease-out);
 
     &:hover {
-      background: var(--color-accent-hover);
-      transform: translateY(-3px);
-      box-shadow: 0 16px 40px rgba(255, 106, 0, 0.42);
-    }
-
-    &:active {
-      transform: translateY(-1px);
+      box-shadow: var(--shadow-cta-lg);
     }
   }
 }

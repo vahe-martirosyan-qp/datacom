@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { AdminSectionDef } from "@/lib/adminSections";
 import { entriesToMap } from "@/lib/contentUtils";
+import { useBlogContentQuery } from "@/hooks/useBlogContentQuery";
+import { useEquipmentContentQuery } from "@/hooks/useEquipmentContentQuery";
+import { useCompanyContentQuery } from "@/hooks/useCompanyContentQuery";
+import { useContactsContentQuery } from "@/hooks/useContactsContentQuery";
+import { usePrivacyContentQuery } from "@/hooks/usePrivacyContentQuery";
 import { useHomeContentQuery } from "@/hooks/useHomeContentQuery";
 import { useLanguagesQuery } from "@/hooks/useLanguagesQuery";
 import { SectionEditorModal } from "./SectionEditorModal";
@@ -18,12 +23,21 @@ interface AdminSectionGridProps {
   pageTitle: string;
   pageLead: string;
   sections: readonly AdminSectionDef[];
+  /** CMS bucket: homepage keys (`home.*`) or company page (`page.company.*`). */
+  contentPage?:
+    | "home"
+    | "company"
+    | "contacts"
+    | "privacy"
+    | "blog"
+    | "equipment";
 }
 
 export function AdminSectionGrid({
   pageTitle,
   pageLead,
   sections,
+  contentPage = "home",
 }: AdminSectionGridProps) {
   const languagesQuery = useLanguagesQuery();
   const languageOptions = useMemo(() => {
@@ -43,18 +57,42 @@ export function AdminSectionGrid({
     }
   }, [languageOptions, editLang]);
 
-  const contentQuery = useHomeContentQuery(editLang);
+  const homeQuery = useHomeContentQuery(editLang);
+  const companyQuery = useCompanyContentQuery(editLang);
+  const contactsQuery = useContactsContentQuery(editLang);
+  const privacyQuery = usePrivacyContentQuery(editLang);
+  const blogQuery = useBlogContentQuery(editLang);
+  const equipmentQuery = useEquipmentContentQuery(editLang);
+  const contentQuery =
+    contentPage === "company"
+      ? companyQuery
+      : contentPage === "contacts"
+        ? contactsQuery
+        : contentPage === "privacy"
+          ? privacyQuery
+          : contentPage === "blog"
+            ? blogQuery
+            : contentPage === "equipment"
+              ? equipmentQuery
+              : homeQuery;
 
-  const map = useMemo(
-    () =>
-      contentQuery.data ? entriesToMap(contentQuery.data.entries) : {},
-    [contentQuery.data]
-  );
+  const map = useMemo(() => {
+    const base = contentQuery.data
+      ? entriesToMap(contentQuery.data.entries)
+      : {};
+    if (contentPage === "equipment" && homeQuery.data) {
+      const homeMap = entriesToMap(homeQuery.data.entries);
+      if (homeMap["home.nav.megaMenu"] !== undefined) {
+        return { ...base, "home.nav.megaMenu": homeMap["home.nav.megaMenu"] };
+      }
+    }
+    return base;
+  }, [contentQuery.data, contentPage, homeQuery.data]);
 
   const activeSection =
     sections.find((s) => s.id === activeSectionId) ?? null;
 
-  if (contentQuery.isError) {
+  if (contentQuery.isError || (contentPage === "equipment" && homeQuery.isError)) {
     return (
       <div className={styles.adminOverview}>
         <p className={styles.adminOverview__lead}>
@@ -89,7 +127,8 @@ export function AdminSectionGrid({
           </label>
         </div>
 
-        {contentQuery.isLoading ? (
+        {contentQuery.isLoading ||
+        (contentPage === "equipment" && homeQuery.isLoading) ? (
           <div className={styles.adminOverview__skeleton}>
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} variant="card" />
@@ -123,6 +162,15 @@ export function AdminSectionGrid({
         section={activeSection}
         lang={editLang}
         contentMap={map}
+        contentPage={contentPage}
+        syncKeysAcrossLanguages={
+          activeSection?.id === "clients"
+            ? ["home.clients.brands"]
+            : activeSection?.id === "media"
+              ? ["page.company.heroImageUrl"]
+              : undefined
+        }
+        syncLanguageCodes={languageOptions.map((l) => l.code)}
         onClose={() => setActiveSectionId(null)}
       />
     </>

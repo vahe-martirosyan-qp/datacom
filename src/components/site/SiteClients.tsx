@@ -1,18 +1,28 @@
 "use client";
 
+import Image from "next/image";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { parseJsonArray } from "@/lib/contentUtils";
+import { parseClientLogos } from "@/lib/clientLogosUtils";
 import styles from "./SiteClients.module.scss";
 
 interface SiteClientsProps {
   map: Record<string, string>;
   isLoading: boolean;
+  /** Overrides `home.clients.title` on pages like `/company`. */
+  titleOverride?: string;
+  /** Overrides `home.clients.subtitle`. */
+  subtitleOverride?: string;
 }
 
-export function SiteClients({ map, isLoading }: SiteClientsProps) {
-  const title = map["home.clients.title"] ?? "";
-  const subtitle = map["home.clients.subtitle"] ?? "";
-  const brands = parseJsonArray<string>(map["home.clients.brands"] ?? "[]", []);
+export function SiteClients({
+  map,
+  isLoading,
+  titleOverride,
+  subtitleOverride,
+}: SiteClientsProps) {
+  const title = titleOverride ?? map["home.clients.title"] ?? "";
+  const subtitle = subtitleOverride ?? map["home.clients.subtitle"] ?? "";
+  const logos = parseClientLogos(map["home.clients.brands"] ?? "[]");
 
   if (isLoading) {
     return (
@@ -20,6 +30,13 @@ export function SiteClients({ map, isLoading }: SiteClientsProps) {
         <div className={styles.siteClients__inner}>
           <Skeleton variant="title" />
           <Skeleton variant="text" />
+          <ul className={styles.siteClients__logos}>
+            {Array.from({ length: 10 }, (_, i) => (
+              <li key={i} className={styles.siteClients__logoItem}>
+                <Skeleton variant="image" />
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     );
@@ -29,14 +46,30 @@ export function SiteClients({ map, isLoading }: SiteClientsProps) {
     <section className={styles.siteClients} id="clients">
       <div className={styles.siteClients__inner}>
         <h2 className={styles.siteClients__title}>{title}</h2>
-        <p className={styles.siteClients__subtitle}>{subtitle}</p>
-        <ul className={styles.siteClients__brands}>
-          {brands.map((name) => (
-            <li key={name} className={styles.siteClients__brand}>
-              {name}
-            </li>
-          ))}
-        </ul>
+        {subtitle ? (
+          <p className={styles.siteClients__subtitle}>{subtitle}</p>
+        ) : null}
+        {logos.length > 0 ? (
+          <ul className={styles.siteClients__logos}>
+            {logos.map((logo, index) => (
+              <li
+                key={`${logo.imageUrl}-${index}`}
+                className={styles.siteClients__logoItem}
+              >
+                <div className={styles.siteClients__logoFrame}>
+                  <Image
+                    className={styles.siteClients__logoImg}
+                    src={logo.imageUrl}
+                    alt={logo.alt ?? ""}
+                    width={280}
+                    height={112}
+                    sizes="(max-width: 768px) 42vw, (max-width: 1024px) 28vw, 280px"
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
     </section>
   );

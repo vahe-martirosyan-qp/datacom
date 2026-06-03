@@ -26,3 +26,10 @@ export interface LoginResponse {
 export interface ApiErrorBody {
   error: string;
 }
+
+export type {
+  LeadFormSource,
+  SubmitLeadRequest,
+  SubmitLeadResponse,
+} from "./lead";
+export { LEAD_FORM_SOURCES } from "./lead";

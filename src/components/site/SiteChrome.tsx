@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import type { Language } from "@/types";
+import { SiteCookieConsent } from "./SiteCookieConsent";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 import styles from "./HomePageView.module.scss";
@@ -12,6 +13,8 @@ interface SiteChromeProps {
   languages: Language[];
   isLoading: boolean;
   loadError?: boolean;
+  /** Header-bottom corner masks (smarteq-style scroll illusion). */
+  shellCorners?: boolean;
   children: ReactNode;
 }
 
@@ -21,6 +24,7 @@ export function SiteChrome({
   languages,
   isLoading,
   loadError,
+  shellCorners = true,
   children,
 }: SiteChromeProps) {
   if (loadError) {
@@ -40,9 +44,11 @@ export function SiteChrome({
         map={map}
         languages={languages}
         isLoading={isLoading}
+        shellCorners={shellCorners}
       />
-      {children}
+      <main className={styles.homePageView__main}>{children}</main>
       <SiteFooter lang={lang} map={map} isLoading={isLoading} />
+      {!isLoading ? <SiteCookieConsent lang={lang} map={map} /> : null}
     </div>
   );
 }

@@ -48,7 +48,7 @@
     }
 
     &--active {
-      background: rgba(255, 106, 0, 0.12);
+      background: var(--color-accent-12);
       border-color: var(--color-accent);
       color: var(--color-accent);
     }

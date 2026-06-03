@@ -13,7 +13,6 @@ import { SiteFeatures } from "./SiteFeatures";
 import { SiteHero } from "./SiteHero";
 import { SiteLeadForm } from "./SiteLeadForm";
 import { SiteProjectsTeaser } from "./SiteProjectsTeaser";
-import { SiteSpotlight } from "./SiteSpotlight";
 import { SiteStatsRow } from "./SiteStatsRow";
 import { SiteSteps } from "./SiteSteps";
 
@@ -22,7 +21,7 @@ interface HomePageViewProps {
 }
 
 /**
- * Homepage section order: hero → stats → spotlight → directions → about →
+ * Homepage section order: hero → stats → directions → about →
  * contact strip → lead form → projects → clients → how we work → blog.
  */
 export function HomePageView({ lang }: HomePageViewProps) {
@@ -46,19 +45,23 @@ export function HomePageView({ lang }: HomePageViewProps) {
       isLoading={isLoading}
       loadError={contentQuery.isError}
     >
-      <main>
+      <>
         <SiteHero lang={lang} map={map} isLoading={isLoading} />
         <SiteStatsRow map={map} isLoading={isLoading} />
-        <SiteSpotlight lang={lang} map={map} isLoading={isLoading} />
         <SiteFeatures map={map} isLoading={isLoading} />
         <SiteAbout lang={lang} map={map} isLoading={isLoading} />
         <SiteContactStrip lang={lang} map={map} isLoading={isLoading} />
-        <SiteLeadForm map={map} isLoading={isLoading} />
+        <SiteLeadForm
+          map={map}
+          isLoading={isLoading}
+          source="home"
+          lang={lang}
+        />
         <SiteProjectsTeaser lang={lang} map={map} isLoading={isLoading} />
         <SiteClients map={map} isLoading={isLoading} />
         <SiteSteps map={map} isLoading={isLoading} />
         <SiteBlogTeaser lang={lang} map={map} isLoading={isLoading} />
-      </main>
+      </>
     </SiteChrome>
   );
 }

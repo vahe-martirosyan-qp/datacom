@@ -21,11 +21,14 @@ function isExternal(href: string): boolean {
   return href.startsWith("http://") || href.startsWith("https://");
 }
 
+import { SiteHeaderCornerMasks } from "./SiteHeaderCornerMasks";
+
 interface SiteHeaderProps {
   lang: string;
   map: Record<string, string>;
   languages: Language[];
   isLoading: boolean;
+  shellCorners?: boolean;
 }
 
 export function SiteHeader({
@@ -33,6 +36,7 @@ export function SiteHeader({
   map,
   languages,
   isLoading,
+  shellCorners = false,
 }: SiteHeaderProps) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
@@ -53,6 +57,16 @@ export function SiteHeader({
       document.body.style.overflow = prev;
     };
   }, [mobileOpen]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   const megaItems = parseNavMegaMenu(map);
   const phone = map["home.header.phone"] ?? "";
@@ -170,7 +184,8 @@ export function SiteHeader({
   );
 
   return (
-    <header
+    <div className={styles.siteHeader__sticky}>
+      <header
       className={styles.siteHeader}
       data-site-header
       onKeyDown={onKeyMenu}
@@ -227,7 +242,7 @@ export function SiteHeader({
               mobileOpen ? ` ${styles["siteHeader__burger--open"]}` : ""
             }`}
             aria-expanded={mobileOpen}
-            aria-label="Menu"
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
             onClick={() => setMobileOpen((v) => !v)}
           >
             <span className={styles.siteHeader__burgerLine} />
@@ -244,17 +259,7 @@ export function SiteHeader({
         aria-hidden={!mobileOpen}
       >
         <div className={styles.siteHeader__mobileSheet}>
-          <div className={styles.siteHeader__mobileHeader}>
-            <button
-              type="button"
-              className={styles.siteHeader__mobileClose}
-              aria-label="Close menu"
-              onClick={() => setMobileOpen(false)}
-            >
-              <span className={styles.siteHeader__mobileCloseIcon} aria-hidden />
-            </button>
-          </div>
-        <div className={styles.siteHeader__mobileTopBar}>
+          <div className={styles.siteHeader__mobileTopBar}>
           {languageSelect(true)}
           <a className={styles.siteHeader__mobilePhone} href={telHref}>
             {phone}
@@ -317,6 +322,9 @@ export function SiteHeader({
         </div>
         </div>
       </div>
+
+      {shellCorners ? <SiteHeaderCornerMasks /> : null}
     </header>
+    </div>
   );
 }

@@ -1,0 +1,229 @@
+@use "@/styles/mixins.scss" as mixins;
+
+.equipmentProductPage {
+  flex: 1;
+  max-width: 100%;
+  overflow-x: clip;
+  background: var(--color-surface);
+
+  &__heroBand {
+    @include mixins.page-hero-band;
+    padding-block: var(--space-10) var(--space-12);
+  }
+
+  &__heroInner {
+    @include mixins.container;
+  }
+
+  &__crumb {
+    margin-bottom: var(--space-6);
+    font-size: var(--text-sm);
+    color: var(--color-text-inverse-muted);
+  }
+
+  &__crumbLink {
+    color: var(--color-text-inverse);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__eyebrow {
+    display: block;
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-inverse-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__title {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-page-title);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--color-text-inverse);
+
+    @include mixins.bp-md {
+      font-size: var(--text-page-title-lg);
+    }
+  }
+
+  &__subtitle {
+    margin: 0 0 var(--space-8);
+    font-size: var(--text-lg);
+    line-height: 1.55;
+    color: var(--color-text-inverse-muted);
+    max-width: 52rem;
+  }
+
+  &__layout {
+    display: grid;
+    gap: var(--space-8);
+
+    @include mixins.bp-lg {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  &__highlights {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  &__highlight {
+    display: flex;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    color: var(--color-text-inverse);
+  }
+
+  &__highlightMark {
+    flex-shrink: 0;
+    font-weight: 700;
+    color: var(--gray-0);
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    align-items: flex-start;
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-family: var(--font-sans);
+    color: var(--gray-0);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__pdf {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-inverse-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-on-inverse-border);
+
+    &:hover {
+      color: var(--color-text-inverse);
+    }
+  }
+
+  &__section {
+    padding-block: var(--space-12);
+
+    &--alt {
+      background: var(--color-surface-alt);
+    }
+  }
+
+  &__sectionInner {
+    @include mixins.container;
+    max-width: 52rem;
+  }
+
+  &__sectionTitle {
+    margin: 0 0 var(--space-8);
+    font-size: var(--text-section-title);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__body {
+    font-size: var(--text-base);
+    line-height: 1.65;
+    color: var(--color-text);
+
+    :global(p) {
+      margin: 0 0 0.85em;
+    }
+
+    :global(h2) {
+      margin: 1.25em 0 0.5em;
+      font-size: var(--text-xl);
+      font-weight: 700;
+    }
+
+    :global(a) {
+      color: var(--color-link);
+    }
+  }
+
+  &__specs {
+    margin: 0 0 var(--space-10);
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--space-4);
+
+    @include mixins.bp-md {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &__spec {
+    padding: var(--space-5);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-lg);
+  }
+
+  &__specTitle {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  &__specDesc {
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--color-text-muted);
+  }
+
+  &__back {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+}

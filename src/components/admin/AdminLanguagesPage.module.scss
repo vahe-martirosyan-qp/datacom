@@ -1,3 +1,5 @@
+@use "@/styles/mixins.scss" as mixins;
+
 .adminLanguages {
   max-width: 960px;
 
@@ -21,12 +23,12 @@
   }
 
   &__ok {
-    color: #15803d;
+    color: var(--color-success);
   }
 
   &__error {
     font-size: var(--text-sm);
-    color: #b91c1c;
+    color: var(--color-error);
     margin-bottom: var(--space-4);
   }
 
@@ -49,8 +51,7 @@
   }
 
   &__btnPrimary {
-    background: var(--color-accent);
-    color: var(--color-bg-deep);
+    @include mixins.button-primary;
     border-color: transparent;
 
     &:disabled {
@@ -66,7 +67,7 @@
 
   &__btnRemove {
     background: transparent;
-    color: #b91c1c;
+    color: var(--color-error);
     border-color: transparent;
     font-weight: 500;
   }

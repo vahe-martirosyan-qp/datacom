@@ -38,6 +38,32 @@ export const GLOBAL_ADMIN_SECTIONS: AdminSectionDef[] = [
       "home.footer.copyright",
     ],
   },
+  {
+    id: "cookies",
+    title: "Cookie и GDPR",
+    description:
+      "Баннер согласия при первом визите. «1» в «Включить баннер» — показать; «0» — скрыть. Ссылка политики — путь без языка (privacy-policy, contacts).",
+    keys: [
+      "global.cookies.enabled",
+      "global.cookies.message",
+      "global.cookies.privacyLabel",
+      "global.cookies.privacyHref",
+      "global.cookies.rejectLabel",
+      "global.cookies.acceptAllLabel",
+      "global.cookies.settingsLabel",
+      "global.cookies.saveLabel",
+      "global.cookies.manageLabel",
+      "global.cookies.settingsTitle",
+      "global.cookies.settingsIntro",
+      "global.cookies.essentialTitle",
+      "global.cookies.essentialDesc",
+      "global.cookies.analyticsTitle",
+      "global.cookies.analyticsDesc",
+      "global.cookies.marketingTitle",
+      "global.cookies.marketingDesc",
+      "global.cookies.alwaysOnLabel",
+    ],
+  },
 ];
 
 /** Только главная страница `/[lang]`. */
@@ -62,26 +88,16 @@ export const HOME_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
   },
   {
     id: "stats",
-    title: "Три колонки (цифры)",
-    description: "Оборудование / Hoteza / Интеграции",
+    title: "Две колонки (цифры)",
+    description: "Оборудование / Интеграции",
     keys: [
       "home.stats.equipmentTitle",
       "home.stats.equipmentCount",
       "home.stats.equipmentDesc",
-      "home.stats.hotezaTitle",
-      "home.stats.hotezaCount",
-      "home.stats.hotezaDesc",
       "home.stats.integrationTitle",
       "home.stats.integrationCount",
       "home.stats.integrationDesc",
     ],
-  },
-  {
-    id: "spotlight",
-    title: "Крупные ссылки под цифрами",
-    description:
-      "Две заметные карточки-ссылки (оборудование / интеграции)",
-    keys: ["home.spotlight.items"],
   },
   {
     id: "features",
@@ -151,7 +167,8 @@ export const HOME_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
   {
     id: "clients",
     title: "Клиенты",
-    description: "Заголовки и список названий брендов",
+    description:
+      "Заголовок и подзаголовок — для выбранного языка; логотипы общие для всех языков (загрузка, обрезка, порядок)",
     keys: [
       "home.clients.title",
       "home.clients.subtitle",
@@ -175,5 +192,157 @@ export const HOME_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
       "home.blog.ctaLabel",
       "home.blog.ctaHref",
     ],
+  },
+];
+
+/** Страница «Компания» `/[lang]/company`. */
+export const COMPANY_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
+  {
+    id: "seo",
+    title: "SEO страницы «Компания»",
+    description: "Заголовок и описание в поиске",
+    keys: ["page.company.seo.title", "page.company.seo.description"],
+  },
+  {
+    id: "hero",
+    title: "Шапка страницы",
+    description: "Заголовок H1, вводный текст, шкала лет",
+    keys: [
+      "page.company.title",
+      "page.company.intro",
+      "page.company.timelineStart",
+      "page.company.timelineEnd",
+    ],
+  },
+  {
+    id: "stats",
+    title: "Цифры (4 карточки)",
+    description: "Сетка статистики под шкалой лет",
+    keys: ["page.company.stats"],
+  },
+  {
+    id: "media",
+    title: "Крупное фото",
+    description: "Изображение перед основным текстом на странице «Компания»",
+    keys: ["page.company.heroImageUrl"],
+  },
+  {
+    id: "body",
+    title: "Основной текст",
+    description: "Статья (TipTap) и ссылка на PDF-бриф",
+    keys: [
+      "page.company.bodyHtml",
+      "page.company.pdfLabel",
+      "page.company.pdfHref",
+    ],
+  },
+  {
+    id: "clients",
+    title: "Блок клиентов",
+    description:
+      "Заголовки на этой странице; список брендов — в «Клиенты» на главной (home.clients.brands)",
+    keys: ["page.company.clientsTitle", "page.company.clientsSubtitle"],
+  },
+];
+
+/** Страница «Политика конфиденциальности» `/[lang]/privacy`. */
+export const PRIVACY_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
+  {
+    id: "seo",
+    title: "SEO",
+    description: "Заголовок и описание в поиске",
+    keys: ["page.privacy.seo.title", "page.privacy.seo.description"],
+  },
+  {
+    id: "hero",
+    title: "Шапка страницы",
+    description: "H1, вводный текст, дата обновления",
+    keys: [
+      "page.privacy.title",
+      "page.privacy.intro",
+      "page.privacy.updatedLabel",
+      "page.privacy.updatedDate",
+    ],
+  },
+  {
+    id: "body",
+    title: "Основной текст (GDPR / 152-ФЗ)",
+    description:
+      "Полный текст политики на `/[lang]/privacy-policy` — визуальный редактор TipTap (заголовки, списки, ссылки).",
+    keys: ["page.privacy.bodyHtml"],
+  },
+];
+
+/** Страница «Контакты» `/[lang]/contacts`. */
+export const CONTACTS_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
+  {
+    id: "seo",
+    title: "SEO страницы «Контакты»",
+    description: "Заголовок и описание в поиске",
+    keys: ["page.contacts.seo.title", "page.contacts.seo.description"],
+  },
+  {
+    id: "hero",
+    title: "Заголовок страницы",
+    description: "H1 на странице контактов",
+    keys: ["page.contacts.title"],
+  },
+  {
+    id: "offices",
+    title: "Офисы и поддержка",
+    description: "Карточки с телефоном, email, адресом и ссылкой на карту",
+    keys: ["page.contacts.offices"],
+  },
+  {
+    id: "form",
+    title: "Форма «Напишите нам»",
+    description:
+      "Заголовки над формой на этой странице; поля формы — в «Форма заявки» на главной (home.lead.*)",
+    keys: ["page.contacts.formTitle", "page.contacts.formSubtitle"],
+  },
+];
+
+/** Страница «Блог» `/[lang]/blog`. */
+export const BLOG_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
+  {
+    id: "seo",
+    title: "SEO страницы «Блог»",
+    description: "Заголовок и описание в поиске",
+    keys: ["page.blog.seo.title", "page.blog.seo.description"],
+  },
+  {
+    id: "hero",
+    title: "Заголовок страницы",
+    description: "H1 и подзаголовок на странице блога",
+    keys: ["page.blog.title", "page.blog.subtitle"],
+  },
+  {
+    id: "posts",
+    title: "Карточки в списке /blog",
+    description:
+      "Только превью в сетке (заголовок, картинка, ссылка). Полный текст статьи — в «Блог» → выберите статью → «Текст статьи».",
+    keys: ["page.blog.posts"],
+  },
+  {
+    id: "loadMore",
+    title: "Кнопка «Показать ещё»",
+    description: "Текст кнопки подгрузки (если статей больше 10)",
+    keys: ["page.blog.loadMoreLabel"],
+  },
+];
+
+/** Страница «Оборудование» `/[lang]/equipment` — только SEO и hero списка. */
+export const EQUIPMENT_PAGE_ADMIN_SECTIONS: AdminSectionDef[] = [
+  {
+    id: "seo",
+    title: "SEO страницы «Оборудование»",
+    description: "Заголовок и описание в поиске",
+    keys: ["page.equipment.seo.title", "page.equipment.seo.description"],
+  },
+  {
+    id: "hero",
+    title: "Заголовок страницы",
+    description: "H1 и подзаголовок на /equipment",
+    keys: ["page.equipment.title", "page.equipment.subtitle"],
   },
 ];

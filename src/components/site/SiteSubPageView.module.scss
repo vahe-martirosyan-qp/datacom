@@ -2,22 +2,26 @@
 
 .siteSubPage {
   flex: 1;
-  padding-block: var(--space-12) var(--space-20);
-  background: var(--color-surface-alt);
+  background: var(--color-surface);
 
-  &__inner {
+  &__hero {
+    padding-block: var(--space-12) var(--space-8);
+    @include mixins.page-hero-band;
+  }
+
+  &__heroInner {
     @include mixins.container;
     max-width: 720px;
   }
 
   &__crumb {
     font-size: var(--text-sm);
-    color: var(--color-text-muted);
+    color: var(--color-text-inverse-muted);
     margin-bottom: var(--space-4);
   }
 
   &__crumbLink {
-    color: var(--color-link);
+    color: var(--color-text-inverse);
     text-decoration: none;
 
     &:hover {
@@ -27,16 +31,21 @@
 
   &__title {
     margin: 0 0 var(--space-4);
-    font-size: var(--text-3xl);
+    font-size: var(--text-page-title);
     font-weight: 700;
+    line-height: 1.15;
     letter-spacing: -0.02em;
-    color: var(--color-text);
+    color: var(--color-text-inverse);
+
+    @include mixins.bp-md {
+      font-size: var(--text-page-title-lg);
+    }
   }
 
   &__lead {
     margin: 0;
     font-size: var(--text-base);
     line-height: 1.6;
-    color: var(--color-text-muted);
+    color: var(--color-text-inverse-muted);
   }
 }

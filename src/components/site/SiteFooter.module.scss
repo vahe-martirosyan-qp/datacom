@@ -2,9 +2,9 @@
 
 .siteFooter {
   background: var(--color-bg-header);
-  color: var(--color-text-inverse);
+  color: var(--color-text);
   padding-block: var(--space-16) var(--space-8);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border-dark);
 
   &__inner {
     @include mixins.container;
@@ -29,7 +29,7 @@
   &__tagline {
     margin: 0;
     font-size: var(--text-sm);
-    color: var(--color-text-inverse-muted);
+    color: var(--color-text-muted);
   }
 
   &__contacts {
@@ -41,7 +41,7 @@
   &__phone {
     font-size: var(--text-lg);
     font-weight: 600;
-    color: var(--color-text-inverse);
+    color: var(--color-text);
     text-decoration: none;
 
     &:hover {
@@ -52,7 +52,7 @@
   &__phoneNote {
     margin: 0;
     font-size: var(--text-xs);
-    color: var(--color-text-inverse-muted);
+    color: var(--color-text-muted);
   }
 
   &__email {
@@ -69,7 +69,7 @@
   &__emailNote {
     margin: 0;
     font-size: var(--text-xs);
-    color: var(--color-text-inverse-muted);
+    color: var(--color-text-muted);
   }
 
   &__columns {
@@ -88,7 +88,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--color-text-inverse-muted);
+    color: var(--color-text-muted);
   }
 
   &__colList {
@@ -102,19 +102,44 @@
 
   &__colLink {
     font-size: var(--text-sm);
-    color: var(--color-text-inverse-muted);
+    color: var(--color-text-muted);
     text-decoration: none;
 
     &:hover {
-      color: var(--color-text-inverse);
+      color: var(--color-text);
     }
   }
 
   &__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3) var(--space-6);
     padding-top: var(--space-8);
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border-dark);
     font-size: var(--text-xs);
-    color: var(--color-text-inverse-muted);
+    color: var(--color-text-muted);
     text-align: center;
+  }
+
+  &__copyright {
+    margin: 0;
+  }
+
+  &__cookieSettings {
+    padding: 0;
+    font-size: inherit;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    color: var(--color-link);
+    text-decoration: underline;
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--color-text);
+    }
   }
 }

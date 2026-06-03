@@ -1,3 +1,5 @@
+@use "@/styles/mixins.scss" as mixins;
+
 .sectionEditorModal__backdrop {
   position: fixed;
   inset: 0;
@@ -6,7 +8,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--color-modal-scrim);
 }
 
 .sectionEditorModal {
@@ -74,7 +76,7 @@
   &__error {
     margin: 0 0 var(--space-4);
     font-size: var(--text-sm);
-    color: #b91c1c;
+    color: var(--color-error);
   }
 
   &__actions {
@@ -89,15 +91,10 @@
     padding: var(--space-3) var(--space-6);
     font-size: var(--text-sm);
     font-weight: 600;
-    color: var(--color-bg-deep);
-    background: var(--color-accent);
+    @include mixins.button-primary;
     border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
-
-    &:hover:not(:disabled) {
-      background: var(--color-accent-hover);
-    }
 
     &:disabled {
       opacity: 0.65;

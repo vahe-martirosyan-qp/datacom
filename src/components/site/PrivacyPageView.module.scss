@@ -1,0 +1,121 @@
+@use "@/styles/mixins.scss" as mixins;
+
+.privacyPage {
+  flex: 1;
+  max-width: 100%;
+  overflow-x: clip;
+  background: var(--color-surface);
+
+  &__heroBand {
+    @include mixins.page-hero-band;
+  }
+
+  &__hero {
+    padding-block: var(--space-12) var(--space-10);
+  }
+
+  &__heroInner {
+    @include mixins.container;
+    max-width: 52rem;
+  }
+
+  &__crumb {
+    margin-bottom: var(--space-6);
+    font-size: var(--text-sm);
+    color: var(--color-text-inverse-muted);
+  }
+
+  &__crumbLink {
+    color: var(--color-text-inverse);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__title {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-page-title);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--color-text-inverse);
+    overflow-wrap: anywhere;
+
+    @include mixins.bp-md {
+      font-size: var(--text-page-title-lg);
+    }
+  }
+
+  &__intro {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-lg);
+    line-height: 1.55;
+    color: var(--color-text-inverse-muted);
+  }
+
+  &__updated {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-inverse-muted);
+  }
+
+  &__updatedLabel {
+    font-weight: 600;
+  }
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  &__content {
+    padding-block: var(--space-12) var(--space-16);
+  }
+
+  &__contentInner {
+    @include mixins.container;
+    max-width: 52rem;
+  }
+
+  &__body {
+    font-size: var(--text-base);
+    line-height: 1.65;
+    color: var(--color-text);
+
+    :global(p) {
+      margin: 0 0 0.85em;
+    }
+
+    :global(ul),
+    :global(ol) {
+      margin: 0 0 0.85em;
+      padding-inline-start: 1.25rem;
+    }
+
+    :global(li) {
+      margin-bottom: 0.35em;
+    }
+
+    :global(h2) {
+      margin: 1.5em 0 0.5em;
+      font-size: var(--text-xl);
+      font-weight: 700;
+    }
+
+    :global(h3) {
+      margin: 1em 0 0.4em;
+      font-size: var(--text-lg);
+      font-weight: 700;
+    }
+
+    :global(a) {
+      color: var(--color-link);
+    }
+
+    :global(em) {
+      font-style: italic;
+    }
+  }
+}
