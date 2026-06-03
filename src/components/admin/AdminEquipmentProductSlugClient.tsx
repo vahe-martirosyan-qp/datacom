@@ -17,6 +17,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { useLanguagesQuery } from "@/hooks/useLanguagesQuery";
 import { fetchEquipmentProductContent } from "@/hooks/useEquipmentProductContentQuery";
 import { SectionEditorModal } from "./SectionEditorModal";
+import type { HomeContentResponse } from "@/types";
 import styles from "./AdminOverview.module.scss";
 
 const FALLBACK_LANGUAGES: { code: string; name: string }[] = [
@@ -39,7 +40,7 @@ function equipmentProductImagesKey(
 function resolveSharedProductImages(
   categorySlug: string,
   productSlug: string,
-  queries: { data?: { entries: { key: string; value: string }[] } }[],
+  queries: { data?: HomeContentResponse }[],
   langCodes: string[],
   preferLang: string
 ): string {
